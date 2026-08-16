@@ -17,7 +17,8 @@ const TEMPLATE_MAP = {
   student:   StudentTemplate,
 } as const;
 
-const A4_W = 794;  // px at 96 dpi
+// A4 at 96 dpi
+const A4_W = 794;
 const A4_H = 1123;
 
 interface Props { data: ResumeData; }
@@ -27,64 +28,55 @@ export function ResumePreview({ data }: Props) {
 
   const Template = TEMPLATE_MAP[data.settings.template] ?? ClassicTemplate;
 
-  const zoomOut  = () => setZoom(z => Math.max(z - 10, 40));
-  const zoomIn   = () => setZoom(z => Math.min(z + 10, 150));
-  const zoomFit  = () => setZoom(90);
-
   return (
     <div className="flex flex-col h-full bg-[#e8edf2]">
 
-      {/* ── Zoom toolbar ─────────────────────────────────────────────── */}
-      <div className="flex items-center justify-center gap-1.5 h-10 shrink-0 bg-white border-b border-slate-200 px-4">
+      {/* ── Zoom bar ─────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-center gap-1 h-10 shrink-0 bg-white border-b border-slate-200 px-4">
         <button
-          onClick={zoomOut}
+          onClick={() => setZoom(z => Math.max(z - 10, 40))}
           className="h-7 w-7 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 transition-colors"
           aria-label="Zoom out"
         >
           <MdRemove size={16} />
         </button>
-
-        <div className="flex items-center gap-1">
-          <span className="text-xs font-mono text-slate-600 w-10 text-center tabular-nums">{zoom}%</span>
-        </div>
-
+        <span className="text-xs font-mono text-slate-500 w-10 text-center tabular-nums select-none">{zoom}%</span>
         <button
-          onClick={zoomIn}
+          onClick={() => setZoom(z => Math.min(z + 10, 150))}
           className="h-7 w-7 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 transition-colors"
           aria-label="Zoom in"
         >
           <MdAdd size={16} />
         </button>
-
-        <div className="w-px h-4 bg-slate-200 mx-0.5" />
-
+        <div className="w-px h-4 bg-slate-200 mx-1" />
         <button
-          onClick={zoomFit}
+          onClick={() => setZoom(90)}
           className="h-7 w-7 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 transition-colors"
-          aria-label="Fit to view"
-          title="Reset zoom"
+          aria-label="Reset zoom"
+          title="Fit to view"
         >
           <MdFitScreen size={15} />
         </button>
-
         <div className="flex-1" />
-
-        <span className="text-[11px] text-slate-400 hidden sm:block select-none">
-          Live Preview
-        </span>
+        <span className="text-[11px] text-slate-400 select-none hidden sm:block">Live Preview</span>
       </div>
 
       {/* ── Scrollable canvas ────────────────────────────────────────── */}
       <div className="flex-1 overflow-auto p-6 flex justify-center items-start">
-        {/* This outer div sets the natural size that the scrollbar tracks */}
+        {/*
+          Outer div tracks the scaled size so scrollbars are correct.
+          id="pdf-scale-wrapper" is used by generatePdf to temporarily
+          remove the transform before capturing.
+        */}
         <div
+          id="pdf-scale-wrapper"
           style={{
             width:     A4_W * (zoom / 100),
             minHeight: A4_H * (zoom / 100),
+            flexShrink: 0,
           }}
-          className="shrink-0"
         >
-          {/* Scale wrapper */}
+          {/* Transform wrapper — generatePdf temporarily sets this to none */}
           <div
             style={{
               width:          A4_W,
@@ -93,10 +85,10 @@ export function ResumePreview({ data }: Props) {
               transformOrigin:'top left',
             }}
           >
-            {/* Actual A4 page — this is what PDF used to capture but now uses off-screen render */}
+            {/* The actual A4 page captured by html2canvas */}
             <div
               id="resume-preview"
-              className="shadow-2xl bg-white"
+              className="bg-white shadow-2xl"
               style={{ width: A4_W, minHeight: A4_H }}
             >
               <Template data={data} />

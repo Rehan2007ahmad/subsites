@@ -2,12 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 import { MobileNav } from './MobileNav';
 
-const navLinks = [
-  { href: '/templates',      label: 'Templates' },
-  { href: '/resume-examples',label: 'Examples'  },
-  { href: '/guides',         label: 'Guides'    },
-];
-
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 h-16 bg-white border-b border-slate-100">
@@ -28,24 +22,17 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
-          {navLinks.map(l => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-
         {/* Right */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <Link
+            href="https://tooleka.com"
+            className="hidden sm:inline-flex text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+          >
+            tooleka.com
+          </Link>
           <Link
             href="/builder"
-            className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
           >
             Create Resume
           </Link>
