@@ -1,46 +1,48 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Input } from '@/components/ui/Input';
+import { Input }    from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
-import { Button } from '@/components/ui/Button';
+import { Button }   from '@/components/ui/Button';
 import { useResumeStore } from '@/store/resumeStore';
 import type { Project } from '@/types/resume';
-import { MdAdd, MdDelete, MdExpandMore, MdExpandLess, MdCode } from 'react-icons/md';
+import { MdAdd, MdDeleteOutline, MdExpandMore, MdExpandLess, MdCode } from 'react-icons/md';
 
-function ProjectCard({ project }: { project: Project }) {
-  const [open, setOpen] = useState(!project.name);
-  const updateProject = useResumeStore((s) => s.updateProject);
-  const removeProject = useResumeStore((s) => s.removeProject);
-  const u = (field: keyof Project, val: string) => updateProject(project.id, { [field]: val });
+function Card({ p }: { p: Project }) {
+  const [open, setOpen] = useState(!p.name);
+  const update = useResumeStore(s => s.updateProject);
+  const remove = useResumeStore(s => s.removeProject);
+  const u = (f: keyof Project, v: string) => update(p.id, { [f]: v });
 
   return (
-    <div className="border border-slate-200 rounded-xl overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-3 bg-white">
-        <button type="button" onClick={() => setOpen((o) => !o)} className="flex-1 text-left min-w-0">
-          <p className="text-sm font-semibold text-slate-800 truncate">{project.name || 'New Project'}</p>
-          <p className="text-xs text-slate-500 truncate">{project.technologies || 'Technologies'}</p>
+    <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
+      <div className="flex items-center gap-2 px-3 py-2.5 hover:bg-slate-50 transition-colors">
+        <button type="button" onClick={() => setOpen(o => !o)} className="flex-1 text-left min-w-0">
+          <p className="text-[13px] font-semibold text-slate-800 truncate">{p.name || 'New Project'}</p>
+          <p className="text-xs text-slate-400 truncate">{p.technologies || 'Technologies'}</p>
         </button>
-        <div className="flex gap-1 shrink-0">
-          <button onClick={() => removeProject(project.id)} className="h-7 w-7 flex items-center justify-center rounded hover:bg-red-50 text-slate-400 hover:text-red-500">
-            <MdDelete size={16} />
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button onClick={() => remove(p.id)}
+            className="h-6 w-6 flex items-center justify-center rounded text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors">
+            <MdDeleteOutline size={15} />
           </button>
-          <button onClick={() => setOpen((o) => !o)} className="h-7 w-7 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400">
-            {open ? <MdExpandLess size={18} /> : <MdExpandMore size={18} />}
+          <button onClick={() => setOpen(o => !o)}
+            className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:bg-slate-100 transition-colors">
+            {open ? <MdExpandLess size={16} /> : <MdExpandMore size={16} />}
           </button>
         </div>
       </div>
       {open && (
-        <div className="border-t border-slate-100 p-4 space-y-3 bg-slate-50">
+        <div className="border-t border-slate-100 bg-slate-50/50 p-3 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input label="Project Name" placeholder="My App" value={project.name} onChange={(e) => u('name', e.target.value)} />
-            <Input label="Date (optional)" type="month" value={project.date ?? ''} onChange={(e) => u('date', e.target.value)} />
+            <Input label="Project Name" placeholder="My App" value={p.name} onChange={e => u('name', e.target.value)} />
+            <Input label="Date (optional)" type="month" value={p.date ?? ''} onChange={e => u('date', e.target.value)} />
           </div>
-          <Textarea label="Description" placeholder="What does it do? What problem does it solve?" rows={3} value={project.description} onChange={(e) => u('description', e.target.value)} />
-          <Input label="Technologies" placeholder="React, Node.js, PostgreSQL" value={project.technologies} onChange={(e) => u('technologies', e.target.value)} hint="Comma-separated" />
+          <Textarea label="Description" placeholder="What does it do? What problem does it solve?" rows={3} value={p.description} onChange={e => u('description', e.target.value)} />
+          <Input label="Technologies" placeholder="React, Node.js, PostgreSQL" value={p.technologies} onChange={e => u('technologies', e.target.value)} hint="Comma-separated" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input label="Live URL (optional)" placeholder="myapp.com" value={project.url ?? ''} onChange={(e) => u('url', e.target.value)} />
-            <Input label="GitHub URL (optional)" placeholder="github.com/you/repo" value={project.githubUrl ?? ''} onChange={(e) => u('githubUrl', e.target.value)} />
+            <Input label="Live URL (optional)"   placeholder="myapp.com" value={p.url ?? ''} onChange={e => u('url', e.target.value)} />
+            <Input label="GitHub URL (optional)" placeholder="github.com/you/repo" value={p.githubUrl ?? ''} onChange={e => u('githubUrl', e.target.value)} />
           </div>
         </div>
       )}
@@ -49,19 +51,19 @@ function ProjectCard({ project }: { project: Project }) {
 }
 
 export function ProjectsForm() {
-  const projects = useResumeStore((s) => s.resume.projects);
-  const addProject = useResumeStore((s) => s.addProject);
+  const projects    = useResumeStore(s => s.resume.projects);
+  const addProject  = useResumeStore(s => s.addProject);
 
   return (
-    <div className="p-4 space-y-3">
+    <div className="p-3 bg-white space-y-2">
       {projects.length === 0 && (
-        <div className="text-center py-8 text-slate-500">
-          <MdCode size={32} className="mx-auto mb-2 text-slate-300" />
-          <p className="text-sm font-medium">No projects added yet</p>
+        <div className="py-8 text-center">
+          <MdCode size={28} className="mx-auto mb-2 text-slate-300" />
+          <p className="text-sm font-medium text-slate-500">No projects added yet</p>
         </div>
       )}
-      {projects.map((p) => <ProjectCard key={p.id} project={p} />)}
-      <Button variant="outline" size="sm" leftIcon={<MdAdd size={16} />} onClick={addProject} className="w-full">
+      {projects.map(p => <Card key={p.id} p={p} />)}
+      <Button variant="outline" size="sm" leftIcon={<MdAdd size={15} />} onClick={addProject} className="w-full mt-1">
         Add Project
       </Button>
     </div>

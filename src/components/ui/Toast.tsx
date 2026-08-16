@@ -5,79 +5,58 @@ import { MdCheckCircle, MdError, MdInfo, MdClose } from 'react-icons/md';
 
 type ToastType = 'success' | 'error' | 'info';
 
-interface ToastItem {
-  id: string;
-  message: string;
-  type: ToastType;
-}
+interface ToastItem { id: string; message: string; type: ToastType; }
+interface ToastCtx  { toast: (msg: string, type?: ToastType) => void; }
 
-interface ToastContextValue {
-  toast: (message: string, type?: ToastType) => void;
-}
+const Ctx = createContext<ToastCtx>({ toast: () => {} });
+export const useToast = () => useContext(Ctx);
 
-const ToastContext = createContext<ToastContextValue>({ toast: () => {} });
+const ICONS = {
+  success: <MdCheckCircle size={16} className="text-emerald-500 shrink-0" />,
+  error:   <MdError       size={16} className="text-red-500    shrink-0" />,
+  info:    <MdInfo        size={16} className="text-blue-500   shrink-0" />,
+};
 
-export function useToast() {
-  return useContext(ToastContext);
-}
-
-function ToastCard({ item, onRemove }: { item: ToastItem; onRemove: (id: string) => void }) {
+function Card({ item, remove }: { item: ToastItem; remove: (id: string) => void }) {
   useEffect(() => {
-    const t = setTimeout(() => onRemove(item.id), 3500);
+    const t = setTimeout(() => remove(item.id), 3600);
     return () => clearTimeout(t);
-  }, [item.id, onRemove]);
-
-  const Icon =
-    item.type === 'success' ? MdCheckCircle
-    : item.type === 'error'   ? MdError
-    : MdInfo;
-
-  const iconColor =
-    item.type === 'success' ? 'text-green-500'
-    : item.type === 'error'   ? 'text-red-500'
-    : 'text-blue-500';
+  }, [item.id, remove]);
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className="flex items-center gap-2.5 rounded-lg bg-white px-4 py-3 shadow-lg border border-slate-200 min-w-[240px] max-w-sm text-sm text-slate-800"
+      className="animate-slide-up flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-lg border border-slate-200 min-w-[260px] max-w-xs text-sm text-slate-800"
     >
-      <Icon className={`${iconColor} shrink-0 text-base`} aria-hidden="true" />
-      <span className="flex-1">{item.message}</span>
-      <button
-        onClick={() => onRemove(item.id)}
-        className="text-slate-400 hover:text-slate-600"
-        aria-label="Dismiss"
-      >
-        <MdClose size={16} />
+      {ICONS[item.type]}
+      <span className="flex-1 leading-snug">{item.message}</span>
+      <button onClick={() => remove(item.id)} className="text-slate-400 hover:text-slate-600 ml-1 shrink-0" aria-label="Dismiss">
+        <MdClose size={14} />
       </button>
     </div>
   );
 }
 
-let _id = 0;
+let _n = 0;
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
-
-  const remove = useCallback((id: string) => {
-    setItems((prev) => prev.filter((t) => t.id !== id));
-  }, []);
-
-  const toast = useCallback((message: string, type: ToastType = 'success') => {
-    const id = String(++_id);
-    setItems((prev) => [...prev.slice(-3), { id, message, type }]);
+  const remove = useCallback((id: string) => setItems(p => p.filter(t => t.id !== id)), []);
+  const toast  = useCallback((message: string, type: ToastType = 'success') => {
+    setItems(p => [...p.slice(-3), { id: String(++_n), message, type }]);
   }, []);
 
   return (
-    <ToastContext.Provider value={{ toast }}>
+    <Ctx.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2" aria-label="Notifications">
-        {items.map((t) => (
-          <ToastCard key={t.id} item={t} onRemove={remove} />
+      <div className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none">
+        {items.map(t => (
+          <div key={t.id} className="pointer-events-auto">
+            <Card item={t} remove={remove} />
+          </div>
         ))}
       </div>
-    </ToastContext.Provider>
+    </Ctx.Provider>
   );
 }

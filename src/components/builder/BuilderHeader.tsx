@@ -10,46 +10,41 @@ import { generateResumePdf } from '@/lib/generatePdf';
 import {
   MdDownload, MdAutorenew, MdPalette, MdCheckCircle,
   MdError, MdUpload, MdFileDownload, MdDelete,
-  MdMoreVert,
+  MdMoreVert, MdVisibility, MdEdit,
 } from 'react-icons/md';
 import { TemplateSelector } from './TemplateSelector';
 
-export function BuilderHeader({
-  mobileTab,
-  setMobileTab,
-}: {
+interface Props {
   mobileTab: 'edit' | 'preview';
   setMobileTab: (t: 'edit' | 'preview') => void;
-}) {
-  const saveStatus = useResumeStore((s) => s.saveStatus);
-  const loadSampleResume = useResumeStore((s) => s.loadSampleResume);
-  const resetResume = useResumeStore((s) => s.resetResume);
-  const importResume = useResumeStore((s) => s.importResume);
-  const exportResume = useResumeStore((s) => s.exportResume);
+}
+
+export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
+  const saveStatus   = useResumeStore(s => s.saveStatus);
+  const resume       = useResumeStore(s => s.resume);
+  const resetResume  = useResumeStore(s => s.resetResume);
+  const importResume = useResumeStore(s => s.importResume);
+  const exportResume = useResumeStore(s => s.exportResume);
   const { toast } = useToast();
 
   const [templateOpen, setTemplateOpen] = useState(false);
-  const [resetOpen, setResetOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [pdfLoading, setPdfLoading] = useState(false);
+  const [resetOpen,    setResetOpen]    = useState(false);
+  const [menuOpen,     setMenuOpen]     = useState(false);
+  const [pdfLoading,   setPdfLoading]   = useState(false);
 
-  const statusIcons = {
-    idle: null,
-    saving: <MdAutorenew size={14} className="animate-spin text-slate-400" />,
-    saved: <MdCheckCircle size={14} className="text-green-500" />,
-    error: <MdError size={14} className="text-red-500" />,
-  };
-  const statusTexts = {
-    idle: '',
-    saving: 'Saving...',
-    saved: 'Saved locally',
-    error: 'Save failed',
-  };
+  /* ── Save status pill ─────────────────────────────────── */
+  const statusConfig = {
+    idle:    { text: '',              icon: null,                                                    cls: '' },
+    saving:  { text: 'Saving…',      icon: <MdAutorenew size={12} className="animate-spin" />,      cls: 'text-slate-500' },
+    saved:   { text: 'Saved locally',icon: <MdCheckCircle size={12} className="text-emerald-500" />, cls: 'text-slate-500' },
+    error:   { text: 'Save failed',  icon: <MdError size={12} className="text-red-500" />,           cls: 'text-red-500' },
+  }[saveStatus];
 
+  /* ── Handlers ─────────────────────────────────────────── */
   async function handleDownloadPdf() {
     setPdfLoading(true);
     try {
-      await generateResumePdf('resume-preview', 'resume-tooleka.pdf');
+      await generateResumePdf(resume, 'resume-tooleka.pdf');
       toast('Resume downloaded as PDF');
     } catch {
       toast('PDF generation failed. Please try again.', 'error');
@@ -59,154 +54,162 @@ export function BuilderHeader({
   }
 
   function handleExport() {
-    const json = exportResume();
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'resume-tooleka.json';
-    a.click();
+    const blob = new Blob([exportResume()], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'resume-tooleka.json'; a.click();
     URL.revokeObjectURL(url);
     toast('Resume data exported');
     setMenuOpen(false);
   }
 
   function handleImport() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (e) => {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = '.json';
+    inp.onchange = e => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
         try {
-          const data = JSON.parse(reader.result as string);
-          importResume(data);
-          toast('Resume imported successfully');
+          importResume(JSON.parse(reader.result as string));
+          toast('Resume imported');
         } catch {
-          toast('Invalid resume file. Please check the format.', 'error');
+          toast('Invalid resume file', 'error');
         }
       };
       reader.readAsText(file);
     };
-    input.click();
+    inp.click();
     setMenuOpen(false);
   }
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-sm h-14 flex items-center">
-        <div className="flex items-center w-full px-4 gap-3">
-          {/* Brand */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-xs">T</span>
-            <span className="hidden sm:block font-semibold text-slate-900 text-sm">
-              ToolEka <span className="text-blue-600">Resume</span>
-            </span>
-          </Link>
+      {/* ── Bar ───────────────────────────────────────────────────────────── */}
+      <header className="h-14 shrink-0 flex items-center border-b border-slate-200 bg-white px-4 gap-4 z-30 relative">
 
-          {/* Save status */}
-          {saveStatus !== 'idle' && (
-            <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 ml-2">
-              {statusIcons[saveStatus]}
-              <span>{statusTexts[saveStatus]}</span>
-            </div>
-          )}
+        {/* Brand */}
+        <Link href="/" className="flex items-center gap-2 shrink-0 mr-1">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-xs select-none">T</span>
+          <span className="hidden sm:flex flex-col leading-none">
+            <span className="text-[13px] font-bold text-slate-900 tracking-tight">ToolEka</span>
+            <span className="text-[10px] font-medium text-blue-600 tracking-wide uppercase">Resume</span>
+          </span>
+        </Link>
 
-          {/* Mobile tab switcher */}
-          <div className="flex md:hidden ml-2 rounded-lg border border-slate-200 overflow-hidden text-xs font-medium">
-            <button
-              onClick={() => setMobileTab('edit')}
-              className={`h-8 px-3 transition-colors ${mobileTab === 'edit' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'}`}
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => setMobileTab('preview')}
-              className={`h-8 px-3 transition-colors ${mobileTab === 'preview' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'}`}
-            >
-              Preview
-            </button>
+        {/* Divider */}
+        <div className="hidden sm:block h-6 w-px bg-slate-200 shrink-0" />
+
+        {/* Save status */}
+        {saveStatus !== 'idle' && (
+          <div className={`hidden sm:flex items-center gap-1.5 text-xs ${statusConfig.cls} shrink-0`}>
+            {statusConfig.icon}
+            <span>{statusConfig.text}</span>
           </div>
+        )}
 
-          <div className="flex-1" />
+        {/* Mobile tabs */}
+        <div className="flex md:hidden rounded-lg overflow-hidden border border-slate-200 shrink-0 ml-1">
+          <button
+            onClick={() => setMobileTab('edit')}
+            className={`flex items-center gap-1.5 h-8 px-3 text-xs font-medium transition-colors ${
+              mobileTab === 'edit' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <MdEdit size={14} /> Edit
+          </button>
+          <button
+            onClick={() => setMobileTab('preview')}
+            className={`flex items-center gap-1.5 h-8 px-3 text-xs font-medium transition-colors border-l border-slate-200 ${
+              mobileTab === 'preview' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <MdVisibility size={14} /> Preview
+          </button>
+        </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              leftIcon={<MdPalette size={16} />}
-              onClick={() => setTemplateOpen(true)}
-              className="hidden sm:inline-flex"
+        <div className="flex-1" />
+
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+
+          {/* Template button — desktop */}
+          <button
+            onClick={() => setTemplateOpen(true)}
+            className="hidden sm:flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all"
+          >
+            <MdPalette size={15} className="text-slate-500" />
+            Template
+          </button>
+
+          {/* Download PDF */}
+          <Button
+            variant="primary"
+            size="sm"
+            loading={pdfLoading}
+            leftIcon={<MdDownload size={15} />}
+            onClick={handleDownloadPdf}
+          >
+            <span className="hidden sm:inline">Download PDF</span>
+            <span className="sm:hidden">PDF</span>
+          </Button>
+
+          {/* More ⋮ */}
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen(o => !o)}
+              className="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+              aria-label="More options"
             >
-              Template
-            </Button>
+              <MdMoreVert size={18} />
+            </button>
 
-            <Button
-              size="sm"
-              leftIcon={<MdDownload size={16} />}
-              onClick={handleDownloadPdf}
-              loading={pdfLoading}
-            >
-              <span className="hidden sm:inline">Download PDF</span>
-              <span className="sm:hidden">PDF</span>
-            </Button>
-
-            {/* More menu */}
-            <div className="relative">
-              <button
-                onClick={() => setMenuOpen((o) => !o)}
-                className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
-                aria-label="More options"
-              >
-                <MdMoreVert size={18} />
-              </button>
-              {menuOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-10 z-20 min-w-[180px] bg-white rounded-xl border border-slate-200 shadow-lg py-1 text-sm">
-                    <button onClick={() => { setTemplateOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-2 px-4 py-2 hover:bg-slate-50 text-slate-700">
-                      <MdPalette size={16} /> Templates
-                    </button>
-                    <button onClick={handleExport} className="flex w-full items-center gap-2 px-4 py-2 hover:bg-slate-50 text-slate-700">
-                      <MdFileDownload size={16} /> Export JSON
-                    </button>
-                    <button onClick={handleImport} className="flex w-full items-center gap-2 px-4 py-2 hover:bg-slate-50 text-slate-700">
-                      <MdUpload size={16} /> Import JSON
-                    </button>
-                    <hr className="my-1 border-slate-100" />
-                    <button onClick={() => { setResetOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-2 px-4 py-2 hover:bg-red-50 text-red-600">
-                      <MdDelete size={16} /> Reset Resume
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                <div className="absolute right-0 top-9 z-20 w-52 bg-white rounded-xl border border-slate-200 shadow-xl py-1 overflow-hidden">
+                  <button onClick={() => { setTemplateOpen(true); setMenuOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                    <MdPalette size={16} className="text-slate-400" /> Templates
+                  </button>
+                  <button onClick={handleExport}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                    <MdFileDownload size={16} className="text-slate-400" /> Export JSON
+                  </button>
+                  <button onClick={handleImport}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                    <MdUpload size={16} className="text-slate-400" /> Import JSON
+                  </button>
+                  <div className="h-px bg-slate-100 my-1" />
+                  <button onClick={() => { setResetOpen(true); setMenuOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                    <MdDelete size={16} /> Reset Resume
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Template dialog */}
-      <Dialog open={templateOpen} onClose={() => setTemplateOpen(false)} title="Choose Template" size="md">
+      {/* Template Dialog */}
+      <Dialog open={templateOpen} onClose={() => setTemplateOpen(false)} title="Choose a Template" size="md">
         <TemplateSelector onClose={() => setTemplateOpen(false)} />
       </Dialog>
 
-      {/* Reset confirm dialog */}
+      {/* Reset Dialog */}
       <Dialog
         open={resetOpen}
         onClose={() => setResetOpen(false)}
         title="Reset Resume"
-        description="This will permanently delete your locally saved resume data. This cannot be undone."
+        description="This will permanently clear your locally saved resume. This action cannot be undone."
         actions={
           <>
-            <Button variant="outline" onClick={() => setResetOpen(false)}>Cancel</Button>
-            <Button
-              variant="danger"
-              onClick={() => { resetResume(); setResetOpen(false); toast('Resume reset', 'info'); }}
-            >
-              Reset
+            <Button variant="outline" size="sm" onClick={() => setResetOpen(false)}>Cancel</Button>
+            <Button variant="danger"  size="sm"
+              onClick={() => { resetResume(); setResetOpen(false); toast('Resume reset', 'info'); }}>
+              Reset Resume
             </Button>
           </>
         }

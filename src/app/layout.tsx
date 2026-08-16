@@ -17,26 +17,14 @@ export const metadata: Metadata = {
   },
   description:
     'Build a professional resume for free. No account, no watermarks, instant PDF download. ATS-friendly templates included.',
-  keywords: [
-    'free resume builder',
-    'resume maker',
-    'CV builder',
-    'ATS resume',
-    'resume templates',
-    'PDF resume download',
-  ],
+  keywords: ['free resume builder', 'resume maker', 'CV builder', 'ATS resume', 'PDF resume'],
   authors: [{ name: 'ToolEka', url: 'https://tooleka.com' }],
   creator: 'ToolEka',
   publisher: 'ToolEka',
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-snippet': -1,
-      'max-image-preview': 'large',
-    },
+    googleBot: { index: true, follow: true, 'max-snippet': -1, 'max-image-preview': 'large' },
   },
   openGraph: {
     type: 'website',
@@ -50,19 +38,13 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Free Resume Builder | ToolEka',
     description: 'Create a professional resume for free. No account required. Download as PDF.',
-    creator: '@tooleka',
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
       <head>
-        {/* Google AdSense Auto Ads — insert publisher ID via env before deploying */}
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
           <script
             async
@@ -71,10 +53,8 @@ export default function RootLayout({
           />
         )}
       </head>
-      <body className="min-h-screen bg-white text-slate-900 antialiased">
-        <ToastProvider>
-          {children}
-        </ToastProvider>
+      <body>
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

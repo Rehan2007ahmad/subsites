@@ -1,110 +1,76 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
-import { Button } from '@/components/ui/Button';
+import { Input }     from '@/components/ui/Input';
+import { Textarea }  from '@/components/ui/Textarea';
+import { Button }    from '@/components/ui/Button';
 import { useResumeStore } from '@/store/resumeStore';
 import type { Experience } from '@/types/resume';
 import {
-  MdAdd, MdDelete, MdExpandMore, MdExpandLess,
+  MdAdd, MdDeleteOutline, MdExpandMore, MdExpandLess,
   MdDragIndicator, MdWork,
 } from 'react-icons/md';
 
-function ExperienceCard({ exp, index, total }: { exp: Experience; index: number; total: number }) {
-  const [open, setOpen] = useState(!exp.jobTitle);
-  const updateExperience = useResumeStore((s) => s.updateExperience);
-  const removeExperience = useResumeStore((s) => s.removeExperience);
-  const reorderExperience = useResumeStore((s) => s.reorderExperience);
-
-  const u = (field: keyof Experience, val: string | boolean) =>
-    updateExperience(exp.id, { [field]: val });
+function Card({ exp, index, total }: { exp: Experience; index: number; total: number }) {
+  const [open, setOpen]     = useState(!exp.jobTitle);
+  const update  = useResumeStore(s => s.updateExperience);
+  const remove  = useResumeStore(s => s.removeExperience);
+  const reorder = useResumeStore(s => s.reorderExperience);
+  const u = (f: keyof Experience, v: string | boolean) => update(exp.id, { [f]: v });
 
   return (
-    <div className="border border-slate-200 rounded-xl overflow-hidden">
-      {/* Card header */}
-      <div className="flex items-center gap-2 px-4 py-3 bg-white">
-        <MdDragIndicator size={18} className="text-slate-300 cursor-grab shrink-0" />
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="flex-1 flex items-start gap-2 text-left min-w-0"
-        >
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-800 truncate">
-              {exp.jobTitle || 'New Experience'}
-            </p>
-            <p className="text-xs text-slate-500 truncate">
-              {exp.company || 'Company'}
-            </p>
-          </div>
+    <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
+      {/* Header row */}
+      <div className="flex items-center gap-2 px-3 py-2.5 hover:bg-slate-50 transition-colors">
+        <MdDragIndicator size={16} className="text-slate-300 shrink-0 cursor-grab" />
+        <button type="button" onClick={() => setOpen(o => !o)} className="flex-1 text-left min-w-0">
+          <p className="text-[13px] font-semibold text-slate-800 truncate">{exp.jobTitle || 'New Position'}</p>
+          <p className="text-xs text-slate-400 truncate">{exp.company || 'Company'}{exp.location ? ` · ${exp.location}` : ''}</p>
         </button>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-0.5 shrink-0">
           {index > 0 && (
-            <button
-              onClick={() => reorderExperience(index, index - 1)}
-              className="h-7 w-7 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400"
-              aria-label="Move up"
-            >↑</button>
+            <button onClick={() => reorder(index, index - 1)}
+              className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:bg-slate-100 text-[11px]" title="Move up">↑</button>
           )}
           {index < total - 1 && (
-            <button
-              onClick={() => reorderExperience(index, index + 1)}
-              className="h-7 w-7 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400"
-              aria-label="Move down"
-            >↓</button>
+            <button onClick={() => reorder(index, index + 1)}
+              className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:bg-slate-100 text-[11px]" title="Move down">↓</button>
           )}
-          <button
-            onClick={() => removeExperience(exp.id)}
-            className="h-7 w-7 flex items-center justify-center rounded hover:bg-red-50 text-slate-400 hover:text-red-500"
-            aria-label="Remove experience"
-          >
-            <MdDelete size={16} />
+          <button onClick={() => remove(exp.id)}
+            className="h-6 w-6 flex items-center justify-center rounded text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors">
+            <MdDeleteOutline size={15} />
           </button>
-          <button
-            onClick={() => setOpen((o) => !o)}
-            className="h-7 w-7 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400"
-            aria-label={open ? 'Collapse' : 'Expand'}
-          >
-            {open ? <MdExpandLess size={18} /> : <MdExpandMore size={18} />}
+          <button onClick={() => setOpen(o => !o)}
+            className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:bg-slate-100 transition-colors">
+            {open ? <MdExpandLess size={16} /> : <MdExpandMore size={16} />}
           </button>
         </div>
       </div>
 
-      {/* Expandable fields */}
+      {/* Fields */}
       {open && (
-        <div className="border-t border-slate-100 p-4 space-y-3 bg-slate-50">
+        <div className="border-t border-slate-100 bg-slate-50/50 p-3 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input label="Job Title" placeholder="Senior Engineer" value={exp.jobTitle} onChange={(e) => u('jobTitle', e.target.value)} />
-            <Input label="Company" placeholder="Acme Corp" value={exp.company} onChange={(e) => u('company', e.target.value)} />
+            <Input label="Job Title"   placeholder="Senior Engineer" value={exp.jobTitle}  onChange={e => u('jobTitle', e.target.value)} />
+            <Input label="Company"     placeholder="Acme Corp"       value={exp.company}   onChange={e => u('company', e.target.value)} />
           </div>
-          <Input label="Location" placeholder="New York, NY or Remote" value={exp.location} onChange={(e) => u('location', e.target.value)} />
+          <Input label="Location" placeholder="New York, NY or Remote" value={exp.location} onChange={e => u('location', e.target.value)} />
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Start Date" type="month" value={exp.startDate} onChange={(e) => u('startDate', e.target.value)} />
-            <Input
-              label="End Date"
-              type="month"
-              value={exp.endDate}
-              disabled={exp.current}
-              onChange={(e) => u('endDate', e.target.value)}
-            />
+            <Input label="Start Date" type="month" value={exp.startDate} onChange={e => u('startDate', e.target.value)} />
+            <Input label="End Date"   type="month" value={exp.endDate} disabled={exp.current} onChange={e => u('endDate', e.target.value)} />
           </div>
-          <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={exp.current}
-              onChange={(e) => u('current', e.target.checked)}
-              className="rounded border-slate-300 text-blue-600"
-            />
+          <label className="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer select-none">
+            <input type="checkbox" checked={exp.current} onChange={e => u('current', e.target.checked)}
+              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
             Currently working here
           </label>
           <Textarea
             label="Description / Achievements"
-            placeholder={"Led development of customer-facing features\nReduced load time by 40% through optimization\nMentored 3 junior developers"}
+            placeholder={"Led development of customer-facing features\nReduced load time by 40%\nMentored 3 junior developers"}
             rows={5}
             value={exp.description}
-            onChange={(e) => u('description', e.target.value)}
-            hint="One achievement per line. Start each with an action verb."
+            onChange={e => u('description', e.target.value)}
+            hint="One achievement per line. Lead each with an action verb."
           />
         </div>
       )}
@@ -113,28 +79,22 @@ function ExperienceCard({ exp, index, total }: { exp: Experience; index: number;
 }
 
 export function ExperienceForm() {
-  const experience = useResumeStore((s) => s.resume.experience);
-  const addExperience = useResumeStore((s) => s.addExperience);
+  const experience    = useResumeStore(s => s.resume.experience);
+  const addExperience = useResumeStore(s => s.addExperience);
 
   return (
-    <div className="p-4 space-y-3">
+    <div className="p-3 bg-white space-y-2">
       {experience.length === 0 && (
-        <div className="text-center py-8 text-slate-500">
-          <MdWork size={32} className="mx-auto mb-2 text-slate-300" />
-          <p className="text-sm font-medium">No experience added yet</p>
-          <p className="text-xs mt-1">Add your work history below</p>
+        <div className="py-8 text-center text-slate-400">
+          <MdWork size={28} className="mx-auto mb-2 text-slate-300" />
+          <p className="text-sm font-medium text-slate-500">No experience added yet</p>
+          <p className="text-xs mt-0.5">Add your work history below</p>
         </div>
       )}
       {experience.map((exp, i) => (
-        <ExperienceCard key={exp.id} exp={exp} index={i} total={experience.length} />
+        <Card key={exp.id} exp={exp} index={i} total={experience.length} />
       ))}
-      <Button
-        variant="outline"
-        size="sm"
-        leftIcon={<MdAdd size={16} />}
-        onClick={addExperience}
-        className="w-full"
-      >
+      <Button variant="outline" size="sm" leftIcon={<MdAdd size={15} />} onClick={addExperience} className="w-full mt-1">
         Add Experience
       </Button>
     </div>
