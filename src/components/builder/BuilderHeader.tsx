@@ -7,11 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { useToast } from '@/components/ui/Toast';
 import { generateResumePdf } from '@/lib/generatePdf';
-import {
-  MdDownload, MdAutorenew, MdPalette, MdCheckCircle,
-  MdError, MdUpload, MdFileDownload, MdDelete,
-  MdMoreVert, MdVisibility, MdEdit,
-} from 'react-icons/md';
+import { HiArrowDownTray, HiArrowPath, HiSwatch, HiEllipsisVertical, HiArrowUpTray, HiArrowDownOnSquare, HiTrash, HiPencilSquare, HiEye } from 'react-icons/hi2';
 import { TemplateSelector } from './TemplateSelector';
 
 interface Props {
@@ -31,15 +27,13 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [pdfLoading,   setPdfLoading]   = useState(false);
 
-  /* ── Save status pill ─────────────────────────────────── */
-  const statusConfig = {
-    idle:    { text: '',              icon: null,                                                    cls: '' },
-    saving:  { text: 'Saving…',      icon: <MdAutorenew size={12} className="animate-spin" />,      cls: 'text-slate-500' },
-    saved:   { text: 'Saved locally',icon: <MdCheckCircle size={12} className="text-emerald-500" />, cls: 'text-slate-500' },
-    error:   { text: 'Save failed',  icon: <MdError size={12} className="text-red-500" />,           cls: 'text-red-500' },
+  const statusText = {
+    idle:   '',
+    saving: 'Saving…',
+    saved:  'Saved locally',
+    error:  'Save failed',
   }[saveStatus];
 
-  /* ── Handlers ─────────────────────────────────────────── */
   async function handleDownloadPdf() {
     setPdfLoading(true);
     try {
@@ -71,12 +65,8 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
-        try {
-          importResume(JSON.parse(reader.result as string));
-          toast('Resume imported');
-        } catch {
-          toast('Invalid resume file', 'error');
-        }
+        try { importResume(JSON.parse(reader.result as string)); toast('Resume imported'); }
+        catch { toast('Invalid resume file', 'error'); }
       };
       reader.readAsText(file);
     };
@@ -86,46 +76,37 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
 
   return (
     <>
-      {/* ── Bar ───────────────────────────────────────────────────────────── */}
-      <header className="h-14 shrink-0 flex items-center border-b border-slate-200 bg-white px-4 gap-4 z-30 relative">
+      <header className="h-14 shrink-0 flex items-center border-b border-[#E5E5E5] bg-white px-4 gap-4 z-30 relative">
 
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2 shrink-0 mr-1">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-xs select-none">T</span>
+        <Link href="/" className="flex items-center gap-2 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black">
+          <span className="flex h-7 w-7 items-center justify-center bg-black text-white text-xs font-black select-none">T</span>
           <span className="hidden sm:flex flex-col leading-none">
-            <span className="text-[13px] font-bold text-slate-900 tracking-tight">ToolEka</span>
-            <span className="text-[10px] font-medium text-blue-600 tracking-wide uppercase">Resume</span>
+            <span className="text-[13px] font-black tracking-tight text-black">Tool<span className="text-[#595959]">Eka</span></span>
+            <span className="text-[9px] font-semibold uppercase tracking-widest text-[#595959]">Resume</span>
           </span>
         </Link>
 
         {/* Divider */}
-        <div className="hidden sm:block h-6 w-px bg-slate-200 shrink-0" />
+        <div className="hidden sm:block h-5 w-px bg-[#E5E5E5] shrink-0" />
 
         {/* Save status */}
         {saveStatus !== 'idle' && (
-          <div className={`hidden sm:flex items-center gap-1.5 text-xs ${statusConfig.cls} shrink-0`}>
-            {statusConfig.icon}
-            <span>{statusConfig.text}</span>
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-[#595959] shrink-0">
+            {saveStatus === 'saving' && <HiArrowPath size={12} className="animate-spin" />}
+            {statusText}
           </div>
         )}
 
         {/* Mobile tabs */}
-        <div className="flex md:hidden rounded-lg overflow-hidden border border-slate-200 shrink-0 ml-1">
-          <button
-            onClick={() => setMobileTab('edit')}
-            className={`flex items-center gap-1.5 h-8 px-3 text-xs font-medium transition-colors ${
-              mobileTab === 'edit' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            <MdEdit size={14} /> Edit
+        <div className="flex md:hidden border border-[#E5E5E5] shrink-0 ml-1 overflow-hidden">
+          <button onClick={() => setMobileTab('edit')}
+            className={`flex items-center gap-1.5 h-8 px-3 text-xs font-semibold transition-colors ${mobileTab === 'edit' ? 'bg-black text-white' : 'bg-white text-[#404040] hover:bg-[#F7F7F7]'}`}>
+            <HiPencilSquare size={13} /> Edit
           </button>
-          <button
-            onClick={() => setMobileTab('preview')}
-            className={`flex items-center gap-1.5 h-8 px-3 text-xs font-medium transition-colors border-l border-slate-200 ${
-              mobileTab === 'preview' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            <MdVisibility size={14} /> Preview
+          <button onClick={() => setMobileTab('preview')}
+            className={`flex items-center gap-1.5 h-8 px-3 text-xs font-semibold border-l border-[#E5E5E5] transition-colors ${mobileTab === 'preview' ? 'bg-black text-white' : 'bg-white text-[#404040] hover:bg-[#F7F7F7]'}`}>
+            <HiEye size={13} /> Preview
           </button>
         </div>
 
@@ -133,58 +114,51 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-
-          {/* Template button — desktop */}
-          <button
-            onClick={() => setTemplateOpen(true)}
-            className="hidden sm:flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all"
-          >
-            <MdPalette size={15} className="text-slate-500" />
-            Template
+          {/* Template — desktop only */}
+          <button onClick={() => setTemplateOpen(true)}
+            className="hidden sm:flex items-center gap-1.5 h-8 px-3 border border-[#E5E5E5] bg-white text-xs font-semibold text-[#404040] hover:border-black hover:text-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black">
+            <HiSwatch size={14} /> Template
           </button>
 
           {/* Download PDF */}
-          <Button
-            variant="primary"
-            size="sm"
-            loading={pdfLoading}
-            leftIcon={<MdDownload size={15} />}
-            onClick={handleDownloadPdf}
-          >
+          <button onClick={handleDownloadPdf} disabled={pdfLoading}
+            className="inline-flex items-center gap-1.5 h-8 px-4 bg-black text-white text-xs font-semibold hover:bg-neutral-800 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1">
+            {pdfLoading
+              ? <HiArrowPath size={13} className="animate-spin" />
+              : <HiArrowDownTray size={13} />
+            }
             <span className="hidden sm:inline">Download PDF</span>
             <span className="sm:hidden">PDF</span>
-          </Button>
+          </button>
 
           {/* More ⋮ */}
           <div className="relative">
-            <button
-              onClick={() => setMenuOpen(o => !o)}
-              className="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
-              aria-label="More options"
-            >
-              <MdMoreVert size={18} />
+            <button onClick={() => setMenuOpen(o => !o)}
+              className="h-8 w-8 flex items-center justify-center border border-[#E5E5E5] text-[#595959] hover:border-black hover:text-black hover:bg-[#F7F7F7] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+              aria-label="More options">
+              <HiEllipsisVertical size={17} />
             </button>
 
             {menuOpen && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                <div className="absolute right-0 top-9 z-20 w-52 bg-white rounded-xl border border-slate-200 shadow-xl py-1 overflow-hidden">
+                <div className="absolute right-0 top-9 z-20 w-52 bg-white border border-[#E5E5E5] shadow-xl py-1">
                   <button onClick={() => { setTemplateOpen(true); setMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-                    <MdPalette size={16} className="text-slate-400" /> Templates
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#404040] hover:bg-[#F7F7F7] hover:text-black transition-colors">
+                    <HiSwatch size={15} /> Templates
                   </button>
                   <button onClick={handleExport}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-                    <MdFileDownload size={16} className="text-slate-400" /> Export JSON
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#404040] hover:bg-[#F7F7F7] hover:text-black transition-colors">
+                    <HiArrowDownOnSquare size={15} /> Export JSON
                   </button>
                   <button onClick={handleImport}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-                    <MdUpload size={16} className="text-slate-400" /> Import JSON
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#404040] hover:bg-[#F7F7F7] hover:text-black transition-colors">
+                    <HiArrowUpTray size={15} /> Import JSON
                   </button>
-                  <div className="h-px bg-slate-100 my-1" />
+                  <div className="h-px bg-[#E5E5E5] my-1" />
                   <button onClick={() => { setResetOpen(true); setMenuOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                    <MdDelete size={16} /> Reset Resume
+                    <HiTrash size={15} /> Reset Resume
                   </button>
                 </div>
               </>
@@ -200,14 +174,13 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
 
       {/* Reset Dialog */}
       <Dialog
-        open={resetOpen}
-        onClose={() => setResetOpen(false)}
+        open={resetOpen} onClose={() => setResetOpen(false)}
         title="Reset Resume"
-        description="This will permanently clear your locally saved resume. This action cannot be undone."
+        description="This will permanently clear your locally saved resume. This cannot be undone."
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={() => setResetOpen(false)}>Cancel</Button>
-            <Button variant="danger"  size="sm"
+            <Button variant="secondary" size="sm" onClick={() => setResetOpen(false)}>Cancel</Button>
+            <Button variant="danger" size="sm"
               onClick={() => { resetResume(); setResetOpen(false); toast('Resume reset', 'info'); }}>
               Reset Resume
             </Button>

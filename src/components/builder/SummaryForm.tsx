@@ -10,21 +10,19 @@ export function SummaryForm() {
 
   return (
     <div className="p-4 bg-white space-y-3">
-      <div className="rounded-lg bg-blue-50 border border-blue-100 px-3 py-2.5">
-        <p className="text-xs text-blue-700 leading-relaxed">
-          <span className="font-semibold">Tip:</span> Keep to 2–4 sentences. Focus on your experience level, core strengths, and the value you bring to the role.
+      <div className="border-l-2 border-black bg-[#F7F7F7] px-3 py-2.5">
+        <p className="text-xs text-[#404040] leading-relaxed">
+          <span className="font-semibold text-black">Tip:</span> Keep to 2–4 sentences. Focus on your experience level, core strengths, and the value you bring.
         </p>
       </div>
-      <Textarea
-        label="Professional Summary"
+      <Textarea label="Professional Summary"
         placeholder="Results-driven software engineer with 5+ years of experience building scalable web applications…"
         rows={5}
         value={summary}
         onChange={e => updateSummary(e.target.value)}
         charCount={summary.length}
         maxChars={600}
-        hint="Aim for 200–450 characters"
-      />
+        hint="Aim for 200–450 characters" />
     </div>
   );
 }

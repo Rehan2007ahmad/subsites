@@ -3,12 +3,12 @@
 import React, { useRef } from 'react';
 import { Input } from '@/components/ui/Input';
 import { useResumeStore } from '@/store/resumeStore';
-import { MdPerson, MdUpload, MdDeleteOutline } from 'react-icons/md';
+import { HiUser, HiArrowUpTray, HiTrash } from 'react-icons/hi2';
 
 export function PersonalForm() {
-  const personal      = useResumeStore(s => s.resume.personal);
-  const updatePersonal= useResumeStore(s => s.updatePersonal);
-  const updateSettings= useResumeStore(s => s.updateSettings);
+  const personal       = useResumeStore(s => s.resume.personal);
+  const updatePersonal = useResumeStore(s => s.updatePersonal);
+  const updateSettings = useResumeStore(s => s.updateSettings);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -20,57 +20,45 @@ export function PersonalForm() {
     r.readAsDataURL(file);
   }
 
-  function removePhoto() {
-    updatePersonal({ photo: undefined });
-    updateSettings({ showPhoto: false });
-  }
-
   return (
-    <div className="p-4 space-y-4 bg-white">
-
-      {/* Photo row */}
+    <div className="p-4 bg-white space-y-4">
+      {/* Photo */}
       <div className="flex items-center gap-4">
-        <div className="h-14 w-14 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center bg-slate-50 shrink-0 overflow-hidden">
+        <div className="h-12 w-12 border border-[#E5E5E5] bg-[#F7F7F7] flex items-center justify-center shrink-0 overflow-hidden">
           {personal.photo
             ? <img src={personal.photo} alt="Profile" className="h-full w-full object-cover" />
-            : <MdPerson size={24} className="text-slate-300" />
+            : <HiUser size={22} className="text-[#595959]" />
           }
         </div>
         <div className="flex gap-2 flex-wrap">
           <button type="button" onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
-            <MdUpload size={13} /> Upload Photo
+            className="inline-flex items-center gap-1.5 h-7 px-3 border border-[#E5E5E5] bg-white text-xs font-semibold text-[#404040] hover:border-black hover:text-black transition-colors">
+            <HiArrowUpTray size={12} /> Upload Photo
           </button>
           {personal.photo && (
-            <button type="button" onClick={removePhoto}
-              className="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg border border-red-100 bg-white text-xs font-medium text-red-500 hover:bg-red-50 transition-colors">
-              <MdDeleteOutline size={13} /> Remove
+            <button type="button" onClick={() => { updatePersonal({ photo: undefined }); updateSettings({ showPhoto: false }); }}
+              className="inline-flex items-center gap-1.5 h-7 px-3 border border-[#E5E5E5] bg-white text-xs font-semibold text-red-600 hover:border-red-400 transition-colors">
+              <HiTrash size={12} /> Remove
             </button>
           )}
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
         </div>
       </div>
 
-      {/* Name + Title */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input label="Full Name *" placeholder="Alex Morgan"
           value={personal.fullName} onChange={e => updatePersonal({ fullName: e.target.value })} />
         <Input label="Professional Title" placeholder="Software Engineer"
           value={personal.jobTitle} onChange={e => updatePersonal({ jobTitle: e.target.value })} />
       </div>
-
-      {/* Contact */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input label="Email" type="email" placeholder="alex@email.com"
           value={personal.email} onChange={e => updatePersonal({ email: e.target.value })} />
         <Input label="Phone" type="tel" placeholder="+1 555 000 0000"
           value={personal.phone} onChange={e => updatePersonal({ phone: e.target.value })} />
       </div>
-
       <Input label="Location" placeholder="San Francisco, CA"
         value={personal.location} onChange={e => updatePersonal({ location: e.target.value })} />
-
-      {/* Links */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input label="Website" placeholder="yoursite.com"
           value={personal.website} onChange={e => updatePersonal({ website: e.target.value })} />

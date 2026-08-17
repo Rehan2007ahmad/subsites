@@ -1,10 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { MdCheckCircle, MdError, MdInfo, MdClose } from 'react-icons/md';
+import { HiCheckCircle, HiXCircle, HiInformationCircle, HiXMark } from 'react-icons/hi2';
 
 type ToastType = 'success' | 'error' | 'info';
-
 interface ToastItem { id: string; message: string; type: ToastType; }
 interface ToastCtx  { toast: (msg: string, type?: ToastType) => void; }
 
@@ -12,14 +11,14 @@ const Ctx = createContext<ToastCtx>({ toast: () => {} });
 export const useToast = () => useContext(Ctx);
 
 const ICONS = {
-  success: <MdCheckCircle size={16} className="text-emerald-500 shrink-0" />,
-  error:   <MdError       size={16} className="text-red-500    shrink-0" />,
-  info:    <MdInfo        size={16} className="text-blue-500   shrink-0" />,
+  success: <HiCheckCircle className="text-black shrink-0" size={15} />,
+  error:   <HiXCircle className="text-red-600 shrink-0" size={15} />,
+  info:    <HiInformationCircle className="text-[#595959] shrink-0" size={15} />,
 };
 
 function Card({ item, remove }: { item: ToastItem; remove: (id: string) => void }) {
   useEffect(() => {
-    const t = setTimeout(() => remove(item.id), 3600);
+    const t = setTimeout(() => remove(item.id), 3800);
     return () => clearTimeout(t);
   }, [item.id, remove]);
 
@@ -27,12 +26,12 @@ function Card({ item, remove }: { item: ToastItem; remove: (id: string) => void 
     <div
       role="status"
       aria-live="polite"
-      className="animate-slide-up flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-lg border border-slate-200 min-w-[260px] max-w-xs text-sm text-slate-800"
+      className="animate-slide-up flex items-center gap-3 bg-white border border-[#E5E5E5] px-4 py-3 shadow-lg min-w-[260px] max-w-xs text-sm text-black"
     >
       {ICONS[item.type]}
-      <span className="flex-1 leading-snug">{item.message}</span>
-      <button onClick={() => remove(item.id)} className="text-slate-400 hover:text-slate-600 ml-1 shrink-0" aria-label="Dismiss">
-        <MdClose size={14} />
+      <span className="flex-1 leading-snug text-xs font-medium">{item.message}</span>
+      <button onClick={() => remove(item.id)} className="text-[#595959] hover:text-black shrink-0 ml-1" aria-label="Dismiss">
+        <HiXMark size={13} />
       </button>
     </div>
   );

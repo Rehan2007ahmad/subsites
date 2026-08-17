@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MdKeyboardArrowDown } from 'react-icons/md';
 
 interface AccordionProps {
   title: string;
@@ -16,38 +15,37 @@ export function Accordion({ title, subtitle, icon, defaultOpen = false, children
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="section-card">
+    <div className="bg-white border border-[#E5E5E5] transition-colors duration-150">
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50/70 transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#F7F7F7] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black"
         aria-expanded={open}
       >
-        {/* Icon */}
+        {/* Icon box — mirrors ToolEka tool card icon */}
         {icon && (
-          <span className="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 shrink-0">
+          <div className="w-7 h-7 flex items-center justify-center border border-[#E5E5E5] bg-[#F7F7F7] text-[#595959] shrink-0 transition-all duration-150 group-hover:border-black group-hover:bg-black group-hover:text-white">
             {icon}
-          </span>
+          </div>
         )}
 
         {/* Text */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-[13px] font-semibold text-slate-800 leading-tight">{title}</span>
+            <span className="text-sm font-semibold text-black leading-tight">{title}</span>
             {badge}
           </div>
-          {subtitle && <p className="text-[11px] text-slate-400 mt-0.5 truncate">{subtitle}</p>}
+          {subtitle && <p className="text-xs text-[#595959] mt-0.5 truncate">{subtitle}</p>}
         </div>
 
-        {/* Chevron */}
-        <MdKeyboardArrowDown
-          size={18}
-          className={`shrink-0 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-        />
+        {/* +/− toggle */}
+        <span className="text-[#595959] text-base leading-none shrink-0 font-light hover:text-black transition-colors">
+          {open ? '−' : '+'}
+        </span>
       </button>
 
       {open && (
-        <div className="border-t border-slate-100">
+        <div className="border-t border-[#E5E5E5]">
           {children}
         </div>
       )}
