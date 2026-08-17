@@ -38,12 +38,12 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
   async function handleDownloadPdf() {
     setPdfLoading(true);
     try {
-      await generateResumePdf(resume, 'resume-tooleka.pdf');
-      toast('Resume downloaded as PDF');
+      await generateResumePdf(resume);
+      toast('Resume downloaded successfully');
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error('PDF error:', err);
-      toast(`PDF failed: ${msg}`, 'error');
+      console.error('[PDF]', err);
+      toast(msg.length > 80 ? msg.slice(0, 80) + '…' : msg, 'error');
     } finally {
       setPdfLoading(false);
     }

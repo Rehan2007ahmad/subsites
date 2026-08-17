@@ -1,30 +1,33 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Remove reactCompiler as it can cause issues with complex client components
-  // reactCompiler: true,
-
-  // Cloudflare-compatible output
-  // output: 'export', // Uncomment for static export / Cloudflare Pages
-
-  // Enable strict mode
   reactStrictMode: true,
 
-  // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
   },
 
-  // Headers for security — allow same-origin iframes for print functionality
+  // Required for @sparticuz/chromium on Vercel
+  // Prevents webpack from trying to bundle native binaries
+  serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium'],
+
+  webpack(config) {
+    // Prevent webpack from bundling puppeteer's native .node files
+    config.externals = config.externals || [];
+    if (Array.isArray(config.externals)) {
+      config.externals.push('puppeteer-core', '@sparticuz/chromium');
+    }
+    return config;
+  },
+
   async headers() {
     return [
       {
         source: '/(.*)',
         headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          // Changed from DENY to SAMEORIGIN so print iframes work
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Content-Type-Options',  value: 'nosniff' },
+          { key: 'X-Frame-Options',          value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy',          value: 'strict-origin-when-cross-origin' },
         ],
       },
     ];
