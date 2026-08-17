@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/Button';
 import { useResumeStore } from '@/store/resumeStore';
-import { MdAdd, MdClose } from 'react-icons/md';
+import { HiPlus, HiXMark } from 'react-icons/hi2';
 
 export function InterestsForm() {
   const interests       = useResumeStore(s => s.resume.interests);
@@ -26,27 +25,26 @@ export function InterestsForm() {
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
           placeholder="Photography, Hiking, Chess…"
-          className="flex-1 h-9 rounded-lg border border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 px-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all"
+          className="flex-1 h-9 bg-[#F7F7F7] border border-[#E5E5E5] hover:border-[#A3A3A3] focus:bg-white focus:border-black px-3 text-sm text-black placeholder:text-[#595959] outline-none transition-colors"
         />
-        <Button size="sm" leftIcon={<MdAdd size={15} />} onClick={handleAdd}>Add</Button>
+        <button onClick={handleAdd} className="inline-flex items-center gap-1.5 h-9 px-4 bg-black text-white text-xs font-semibold hover:bg-neutral-800 transition-colors">
+          <HiPlus size={14} /> Add
+        </button>
       </div>
-
-      {interests.length === 0
-        ? <p className="text-xs text-slate-400 text-center py-3">No interests added yet</p>
-        : (
-          <div className="flex flex-wrap gap-1.5">
-            {interests.map(item => (
-              <span key={item} className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-                {item}
-                <button onClick={() => updateInterests(interests.filter(i => i !== item))}
-                  className="text-slate-400 hover:text-slate-700 transition-colors" aria-label={`Remove ${item}`}>
-                  <MdClose size={12} />
-                </button>
-              </span>
-            ))}
-          </div>
-        )
-      }
+      {interests.length === 0 ? (
+        <p className="text-xs text-[#595959] text-center py-3">No interests added yet</p>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {interests.map(item => (
+            <span key={item} className="inline-flex items-center gap-1 border border-[#E5E5E5] bg-white px-2.5 py-1 text-xs font-medium text-[#404040] hover:border-black transition-colors group">
+              {item}
+              <button onClick={() => updateInterests(interests.filter(i => i !== item))} className="text-[#D4D4D4] group-hover:text-black ml-0.5 transition-colors" aria-label={`Remove ${item}`}>
+                <HiXMark size={11} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
