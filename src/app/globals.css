@@ -44,7 +44,15 @@ body {
   }
 }
 
-/* ─── Toast ─────────────────────────────────────────────────── */
+/* ─── Print ─────────────────────────────────────────────────── */
+@media print {
+  body { background: #fff !important; }
+  /* Ensure colors print correctly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
 @keyframes slide-up {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }

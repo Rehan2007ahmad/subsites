@@ -1,111 +1,114 @@
 'use client';
 
 /**
- * PDF Generation — clone-and-print approach
+ * PDF Generation — direct download, no print dialog
  *
- * How it works:
- *  1. Find #resume-preview (the live, styled A4 div)
- *  2. Deep-clone it into a hidden <div id="print-root">
- *  3. Inject a <style> that hides everything except #print-root on @media print
- *  4. Call window.print() — browser renders it as a clean A4 PDF
- *  5. Restore original state after the print dialog closes
+ * Strategy:
+ *  1. Grab the live #resume-preview element (already perfectly styled)
+ *  2. Temporarily move it out of its CSS transform wrapper so it sits
+ *     at natural 794 px with no scale distortion
+ *  3. Capture with html2canvas at 2× scale
+ *  4. Pack into jsPDF and trigger a real file download
+ *  5. Restore the transform immediately
  *
- * Why this beats html2canvas + jsPDF:
- *  - Uses the real DOM + real CSS — no rendering artifacts
- *  - Produces text-based, selectable, searchable PDFs
- *  - Works on every browser including mobile
- *  - Works on Vercel, Cloudflare, any hosting
- *  - No external library needed at runtime (jspdf/html2canvas no longer used)
- *  - Multi-page handled automatically by the browser print engine
+ * This avoids the print dialog entirely and produces a real PDF file.
  */
 
 import type { ResumeData } from '@/types/resume';
 
+const A4_W_MM = 210;
+const A4_H_MM = 297;
+
 export async function generateResumePdf(
-  // data param kept for API compatibility — not used in clone approach
   _data: ResumeData,
   filename = 'resume-tooleka.pdf',
 ): Promise<void> {
   const el = document.getElementById('resume-preview');
   if (!el) throw new Error('#resume-preview not found.');
 
-  // 1. Create a print container
-  const printRoot = document.createElement('div');
-  printRoot.id = 'pdf-print-root';
+  // ── 1. Strip the CSS transform so html2canvas sees natural 794 px ──────
+  const wrapper = el.parentElement as HTMLElement; // this has transform:scale()
+  const saved = {
+    transform:      wrapper.style.transform,
+    width:          wrapper.style.width,
+    minHeight:      wrapper.style.minHeight,
+    position:       wrapper.style.position,
+  };
 
-  // 2. Clone the resume element at natural 794px (strip the CSS transform first)
-  const transformWrapper = el.parentElement as HTMLElement;
-  const savedTransform   = transformWrapper?.style.transform ?? '';
-  const savedWidth       = transformWrapper?.style.width ?? '';
+  wrapper.style.transform = 'none';
+  wrapper.style.width     = '794px';
+  wrapper.style.minHeight = '1123px';
+  // Move wrapper temporarily outside the overflow:hidden scroll container
+  // so html2canvas can measure its full height correctly
+  wrapper.style.position  = 'fixed';
+  wrapper.style.top       = '0';
+  wrapper.style.left      = '0';
+  (wrapper.style as CSSStyleDeclaration & { zIndex: string }).zIndex = '-9999';
 
-  if (transformWrapper) {
-    transformWrapper.style.transform = 'none';
-    transformWrapper.style.width     = '794px';
-  }
-
-  // Allow one repaint at 1:1 scale before cloning
+  // Wait for the browser to repaint at 1:1
   await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
 
-  // Deep-clone with computed styles preserved (cloneNode keeps inline styles)
-  const clone = el.cloneNode(true) as HTMLElement;
-  clone.style.width    = '794px';
-  clone.style.minHeight = '1123px';
-  clone.removeAttribute('id'); // avoid duplicate IDs
-  printRoot.appendChild(clone);
+  // ── 2. Dynamically import heavy libraries (only loaded when needed) ─────
+  const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+    import('html2canvas'),
+    import('jspdf'),
+  ]);
 
-  // 3. Restore transform on the live preview immediately
-  if (transformWrapper) {
-    transformWrapper.style.transform = savedTransform;
-    transformWrapper.style.width     = savedWidth;
+  try {
+    // ── 3. Capture ─────────────────────────────────────────────────────────
+    const canvas = await html2canvas(el, {
+      scale: 2,                   // retina quality
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      // Tell html2canvas the exact pixel dimensions to capture
+      width:  794,
+      height: el.scrollHeight,
+      windowWidth:  794,
+      windowHeight: el.scrollHeight,
+      // Ignore elements that might bleed outside (scrollbars etc.)
+      ignoreElements: (node: Element) => {
+        if (node === el) return false;
+        // Skip any fixed/sticky UI elements outside the resume
+        const s = window.getComputedStyle(node);
+        return s.position === 'fixed' && node !== el;
+      },
+    });
+
+    // ── 4. Build PDF ────────────────────────────────────────────────────────
+    const imgW  = A4_W_MM;
+    const imgH  = (canvas.height / canvas.width) * A4_W_MM; // proportional
+
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    // Convert canvas to a data URL once (reuse across pages)
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+    // Page 1
+    pdf.addImage(imgData, 'JPEG', 0, 0, imgW, imgH, '', 'FAST');
+
+    // Additional pages if resume is taller than one A4
+    let remaining = imgH - A4_H_MM;
+    let offsetY   = -A4_H_MM;
+    while (remaining > 2) {
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, offsetY, imgW, imgH, '', 'FAST');
+      offsetY   -= A4_H_MM;
+      remaining -= A4_H_MM;
+    }
+
+    // ── 5. Download ─────────────────────────────────────────────────────────
+    pdf.save(filename);
+
+  } finally {
+    // Always restore — even if capture fails
+    wrapper.style.transform = saved.transform;
+    wrapper.style.width     = saved.width;
+    wrapper.style.minHeight = saved.minHeight;
+    wrapper.style.position  = saved.position;
+    wrapper.style.top       = '';
+    wrapper.style.left      = '';
+    (wrapper.style as CSSStyleDeclaration & { zIndex: string }).zIndex = '';
   }
-
-  // 4. Inject print styles
-  const style = document.createElement('style');
-  style.id = 'pdf-print-styles';
-  style.textContent = `
-    @media print {
-      /* Hide everything */
-      body > *:not(#pdf-print-root) { display: none !important; }
-      #pdf-print-root {
-        display: block !important;
-        position: static !important;
-        width: 210mm !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #fff !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      @page {
-        size: A4 portrait;
-        margin: 0;
-      }
-    }
-    @media screen {
-      #pdf-print-root { display: none; }
-    }
-  `;
-
-  // 5. Mount and print
-  document.head.appendChild(style);
-  document.body.appendChild(printRoot);
-
-  return new Promise<void>((resolve) => {
-    // Use afterprint event to clean up
-    function cleanup() {
-      window.removeEventListener('afterprint', cleanup);
-      try { document.head.removeChild(style);   } catch {}
-      try { document.body.removeChild(printRoot); } catch {}
-      resolve();
-    }
-
-    window.addEventListener('afterprint', cleanup);
-
-    // Trigger print
-    setTimeout(() => {
-      window.print();
-      // Fallback cleanup if afterprint doesn't fire (some browsers)
-      setTimeout(cleanup, 3000);
-    }, 100);
-  });
 }

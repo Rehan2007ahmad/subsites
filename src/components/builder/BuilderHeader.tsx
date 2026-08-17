@@ -39,10 +39,10 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
     setPdfLoading(true);
     try {
       await generateResumePdf(resume, 'resume-tooleka.pdf');
-      toast('Resume sent to printer / PDF');
+      toast('Resume downloaded as PDF');
     } catch (err) {
       console.error('PDF error:', err);
-      toast('PDF generation failed. Please try again.', 'error');
+      toast('PDF download failed. Please try again.', 'error');
     } finally {
       setPdfLoading(false);
     }
