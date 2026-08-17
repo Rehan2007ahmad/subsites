@@ -11,7 +11,7 @@ export function Input({ label, error, hint, className = '', id, ...props }: Inpu
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={uid} className="text-xs font-medium text-slate-600 select-none">
+        <label htmlFor={uid} className="text-xs font-semibold text-[#595959] select-none">
           {label}
         </label>
       )}
@@ -19,16 +19,16 @@ export function Input({ label, error, hint, className = '', id, ...props }: Inpu
         id={uid}
         {...props}
         className={[
-          'w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none',
-          'transition-all duration-150',
-          'focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20',
-          'disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed',
-          error ? 'border-red-400 focus:ring-red-300/30' : 'border-slate-200 hover:border-slate-300',
+          'w-full bg-[#F7F7F7] border px-3 py-2 text-sm text-black placeholder:text-[#595959] outline-none',
+          'transition-colors duration-150',
+          'focus:bg-white focus:border-black',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
+          error ? 'border-red-500' : 'border-[#E5E5E5] hover:border-[#A3A3A3]',
           className,
         ].join(' ')}
       />
-      {error && <p className="text-xs text-red-500">{error}</p>}
-      {hint && !error && <p className="text-xs text-slate-400">{hint}</p>}
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      {hint && !error && <p className="text-xs text-[#595959]">{hint}</p>}
     </div>
   );
 }

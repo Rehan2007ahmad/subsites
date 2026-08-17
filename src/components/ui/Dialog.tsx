@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { MdClose } from 'react-icons/md';
+import { HiXMark } from 'react-icons/hi2';
 
 interface DialogProps {
   open: boolean;
@@ -28,24 +28,24 @@ export function Dialog({ open, onClose, title, description, children, actions, s
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal aria-labelledby="dlg-title">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose} />
-      <div className={`relative w-full ${maxW} rounded-2xl bg-white shadow-2xl`}>
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className={`relative w-full ${maxW} bg-white border border-[#E5E5E5] shadow-2xl`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E5E5]">
           <div>
-            <h2 id="dlg-title" className="text-sm font-semibold text-slate-900">{title}</h2>
-            {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
+            <h2 id="dlg-title" className="text-sm font-bold text-black">{title}</h2>
+            {description && <p className="mt-0.5 text-xs text-[#595959]">{description}</p>}
           </div>
           <button
             onClick={onClose}
-            className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-[#595959] hover:text-black hover:bg-[#F7F7F7] transition-colors"
             aria-label="Close"
           >
-            <MdClose size={16} />
+            <HiXMark size={16} />
           </button>
         </div>
-        {children && <div className="px-5 py-4">{children}</div>}
-        {actions && <div className="flex justify-end gap-2 px-5 pb-5">{actions}</div>}
+        {children && <div className="px-6 py-5">{children}</div>}
+        {actions && <div className="flex justify-end gap-2 px-6 pb-5">{actions}</div>}
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 import React from 'react';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
-type Size    = 'xs' | 'sm' | 'md' | 'lg';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Size    = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:  Variant;
@@ -12,19 +12,18 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   rightIcon?: React.ReactNode;
 }
 
+// ToolEka: sharp corners, black primary, bordered secondary
 const V: Record<Variant, string> = {
-  primary:   'bg-blue-600 text-white hover:bg-blue-700 shadow-sm shadow-blue-200/60',
-  secondary: 'bg-slate-100 text-slate-700 hover:bg-slate-200',
-  ghost:     'bg-transparent text-slate-600 hover:bg-slate-100',
-  danger:    'bg-red-600 text-white hover:bg-red-700',
-  outline:   'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300',
+  primary:   'bg-black text-white hover:bg-neutral-800 focus-visible:ring-black',
+  secondary: 'border border-[#E5E5E5] bg-white text-[#404040] hover:border-black hover:text-black',
+  ghost:     'bg-transparent text-[#404040] hover:text-black hover:bg-[#F7F7F7]',
+  danger:    'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600',
 };
 
 const S: Record<Size, string> = {
-  xs: 'h-7  px-2.5 text-xs  gap-1.5 rounded-md',
-  sm: 'h-8  px-3   text-xs  gap-1.5 rounded-lg',
-  md: 'h-9  px-4   text-sm  gap-2   rounded-lg',
-  lg: 'h-11 px-6   text-sm  gap-2   rounded-xl',
+  sm: 'h-8  px-3   text-xs  gap-1.5',
+  md: 'h-9  px-4   text-sm  gap-2',
+  lg: 'h-11 px-6   text-sm  gap-2',
 };
 
 export function Button({
@@ -36,14 +35,14 @@ export function Button({
       {...props}
       disabled={disabled || loading}
       className={[
-        'inline-flex items-center justify-center font-medium transition-all duration-150',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1',
+        'inline-flex items-center justify-center font-semibold transition-colors duration-150',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
         'disabled:opacity-50 disabled:cursor-not-allowed',
         V[variant], S[size], className,
       ].join(' ')}
     >
       {loading
-        ? <AiOutlineLoading3Quarters className="animate-spin shrink-0" size={14} />
+        ? <AiOutlineLoading3Quarters className="animate-spin shrink-0" size={13} />
         : leftIcon && <span className="shrink-0">{leftIcon}</span>
       }
       {children}

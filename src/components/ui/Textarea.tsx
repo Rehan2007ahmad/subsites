@@ -13,7 +13,7 @@ export function Textarea({ label, error, hint, charCount, maxChars, className = 
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={uid} className="text-xs font-medium text-slate-600 select-none">
+        <label htmlFor={uid} className="text-xs font-semibold text-[#595959] select-none">
           {label}
         </label>
       )}
@@ -21,21 +21,20 @@ export function Textarea({ label, error, hint, charCount, maxChars, className = 
         id={uid}
         {...props}
         className={[
-          'w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none resize-y',
-          'transition-all duration-150',
-          'focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20',
-          'disabled:bg-slate-50 disabled:text-slate-400',
-          error ? 'border-red-400' : 'border-slate-200 hover:border-slate-300',
+          'w-full bg-[#F7F7F7] border px-3 py-2 text-sm text-black placeholder:text-[#595959] outline-none resize-y',
+          'transition-colors duration-150',
+          'focus:bg-white focus:border-black',
+          error ? 'border-red-500' : 'border-[#E5E5E5] hover:border-[#A3A3A3]',
           className,
         ].join(' ')}
       />
       <div className="flex justify-between items-center">
         <span>
-          {error && <p className="text-xs text-red-500">{error}</p>}
-          {hint && !error && <p className="text-xs text-slate-400">{hint}</p>}
+          {error && <p className="text-xs text-red-600">{error}</p>}
+          {hint && !error && <p className="text-xs text-[#595959]">{hint}</p>}
         </span>
         {maxChars !== undefined && charCount !== undefined && (
-          <span className={`text-xs tabular-nums ${charCount > maxChars ? 'text-red-500' : 'text-slate-400'}`}>
+          <span className={`text-xs tabular-nums ${charCount > maxChars ? 'text-red-500' : 'text-[#595959]'}`}>
             {charCount}/{maxChars}
           </span>
         )}
