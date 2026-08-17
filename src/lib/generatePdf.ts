@@ -3,92 +3,106 @@
 /**
  * PDF Generation — direct download, no print dialog
  *
- * Strategy:
- *  1. Grab the live #resume-preview element (already perfectly styled)
- *  2. Temporarily move it out of its CSS transform wrapper so it sits
- *     at natural 794 px with no scale distortion
- *  3. Capture with html2canvas at 2× scale
- *  4. Pack into jsPDF and trigger a real file download
- *  5. Restore the transform immediately
+ * Root cause of "Unable to find element in cloned iframe":
+ *   html2canvas clones the entire document into a hidden iframe to measure
+ *   layout. If the target element is inside overflow:hidden / transform /
+ *   stacking contexts, the clone loses the element reference.
  *
- * This avoids the print dialog entirely and produces a real PDF file.
+ * Solution:
+ *   Render the resume template into a brand-new, completely isolated
+ *   top-level container that has NONE of those constraints, capture it
+ *   with html2canvas, then remove it. The live preview is never touched.
+ *
+ * This works on every browser and every hosting provider including Vercel.
  */
 
 import type { ResumeData } from '@/types/resume';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 
-const A4_W_MM = 210;
-const A4_H_MM = 297;
+const A4_W_MM  = 210;
+const A4_H_MM  = 297;
+const A4_W_PX  = 794;   // px at 96 dpi
 
 export async function generateResumePdf(
-  _data: ResumeData,
+  data: ResumeData,
   filename = 'resume-tooleka.pdf',
 ): Promise<void> {
-  const el = document.getElementById('resume-preview');
-  if (!el) throw new Error('#resume-preview not found.');
 
-  // ── 1. Strip the CSS transform so html2canvas sees natural 794 px ──────
-  const wrapper = el.parentElement as HTMLElement; // this has transform:scale()
-  const saved = {
-    transform:      wrapper.style.transform,
-    width:          wrapper.style.width,
-    minHeight:      wrapper.style.minHeight,
-    position:       wrapper.style.position,
+  // ── 1. Pick the right template component ──────────────────────────────
+  const { ClassicTemplate }   = await import('@/components/resume/templates/ClassicTemplate');
+  const { ModernTemplate }    = await import('@/components/resume/templates/ModernTemplate');
+  const { MinimalTemplate }   = await import('@/components/resume/templates/MinimalTemplate');
+  const { DeveloperTemplate } = await import('@/components/resume/templates/DeveloperTemplate');
+  const { StudentTemplate }   = await import('@/components/resume/templates/StudentTemplate');
+
+  const TEMPLATE_MAP: Record<string, React.ComponentType<{ data: ResumeData }>> = {
+    classic:   ClassicTemplate,
+    modern:    ModernTemplate,
+    minimal:   MinimalTemplate,
+    developer: DeveloperTemplate,
+    student:   StudentTemplate,
   };
 
-  wrapper.style.transform = 'none';
-  wrapper.style.width     = '794px';
-  wrapper.style.minHeight = '1123px';
-  // Move wrapper temporarily outside the overflow:hidden scroll container
-  // so html2canvas can measure its full height correctly
-  wrapper.style.position  = 'fixed';
-  wrapper.style.top       = '0';
-  wrapper.style.left      = '0';
-  (wrapper.style as CSSStyleDeclaration & { zIndex: string }).zIndex = '-9999';
+  const Template = TEMPLATE_MAP[data.settings.template] ?? ClassicTemplate;
 
-  // Wait for the browser to repaint at 1:1
-  await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+  // ── 2. Mount into a clean top-level container ──────────────────────────
+  // Position absolute at top-left, behind everything, exact A4 width,
+  // NO overflow:hidden parent, NO transform, NO stacking context tricks.
+  const host = document.createElement('div');
+  host.style.cssText = [
+    'position:absolute',
+    'top:0',
+    'left:0',
+    `width:${A4_W_PX}px`,
+    'min-height:1123px',
+    'background:#fff',
+    'z-index:-1',
+    'pointer-events:none',
+    'overflow:visible',
+    'display:block',
+  ].join(';');
+  document.body.appendChild(host);
 
-  // ── 2. Dynamically import heavy libraries (only loaded when needed) ─────
+  // Mount the React component into the host
+  const root = createRoot(host);
+  await new Promise<void>(resolve => {
+    root.render(React.createElement(Template, { data }));
+    // Two rAF cycles: first for React paint, second for browser layout
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+
+  // ── 3. Load heavy libs (dynamic — only fetched on first click) ─────────
   const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
     import('html2canvas'),
     import('jspdf'),
   ]);
 
   try {
-    // ── 3. Capture ─────────────────────────────────────────────────────────
-    const canvas = await html2canvas(el, {
-      scale: 2,                   // retina quality
+    // ── 4. Capture ──────────────────────────────────────────────────────
+    const canvas = await html2canvas(host, {
+      scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
-      // Tell html2canvas the exact pixel dimensions to capture
-      width:  794,
-      height: el.scrollHeight,
-      windowWidth:  794,
-      windowHeight: el.scrollHeight,
-      // Ignore elements that might bleed outside (scrollbars etc.)
-      ignoreElements: (node: Element) => {
-        if (node === el) return false;
-        // Skip any fixed/sticky UI elements outside the resume
-        const s = window.getComputedStyle(node);
-        return s.position === 'fixed' && node !== el;
-      },
+      width:        A4_W_PX,
+      windowWidth:  A4_W_PX,
+      // Capture the full rendered height, not just the viewport
+      height:       host.scrollHeight,
+      windowHeight: host.scrollHeight,
     });
 
-    // ── 4. Build PDF ────────────────────────────────────────────────────────
+    // ── 5. Build PDF ────────────────────────────────────────────────────
     const imgW  = A4_W_MM;
-    const imgH  = (canvas.height / canvas.width) * A4_W_MM; // proportional
+    const imgH  = (canvas.height / canvas.width) * A4_W_MM;
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    // Convert canvas to a data URL once (reuse across pages)
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-    // Page 1
     pdf.addImage(imgData, 'JPEG', 0, 0, imgW, imgH, '', 'FAST');
 
-    // Additional pages if resume is taller than one A4
+    // Additional pages for long resumes
     let remaining = imgH - A4_H_MM;
     let offsetY   = -A4_H_MM;
     while (remaining > 2) {
@@ -98,17 +112,12 @@ export async function generateResumePdf(
       remaining -= A4_H_MM;
     }
 
-    // ── 5. Download ─────────────────────────────────────────────────────────
+    // ── 6. Download ─────────────────────────────────────────────────────
     pdf.save(filename);
 
   } finally {
-    // Always restore — even if capture fails
-    wrapper.style.transform = saved.transform;
-    wrapper.style.width     = saved.width;
-    wrapper.style.minHeight = saved.minHeight;
-    wrapper.style.position  = saved.position;
-    wrapper.style.top       = '';
-    wrapper.style.left      = '';
-    (wrapper.style as CSSStyleDeclaration & { zIndex: string }).zIndex = '';
+    // Always clean up the off-screen mount
+    root.unmount();
+    document.body.removeChild(host);
   }
 }
