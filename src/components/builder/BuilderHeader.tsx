@@ -17,6 +17,7 @@ interface Props {
 
 export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
   const saveStatus   = useResumeStore(s => s.saveStatus);
+  const resume       = useResumeStore(s => s.resume);
   const resetResume  = useResumeStore(s => s.resetResume);
   const importResume = useResumeStore(s => s.importResume);
   const exportResume = useResumeStore(s => s.exportResume);
@@ -37,10 +38,10 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
   async function handleDownloadPdf() {
     setPdfLoading(true);
     try {
-      await generateResumePdf('resume-tooleka.pdf');
-      toast('Resume downloaded as PDF');
+      await generateResumePdf(resume, 'resume-tooleka.pdf');
+      toast('Resume sent to printer / PDF');
     } catch (err) {
-      console.error(err);
+      console.error('PDF error:', err);
       toast('PDF generation failed. Please try again.', 'error');
     } finally {
       setPdfLoading(false);

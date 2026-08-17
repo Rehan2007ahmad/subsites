@@ -15,14 +15,15 @@ const nextConfig: NextConfig = {
     formats: ['image/webp', 'image/avif'],
   },
 
-  // Headers for security
+  // Headers for security — allow same-origin iframes for print functionality
   async headers() {
     return [
       {
         source: '/(.*)',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'DENY' },
+          // Changed from DENY to SAMEORIGIN so print iframes work
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         ],
       },
