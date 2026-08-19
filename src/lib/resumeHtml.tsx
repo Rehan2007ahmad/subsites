@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import ReactDOMServer from 'react-dom/server';
 import type { ResumeData } from '@/types/resume';
 import { ClassicTemplate }   from '@/components/resume/templates/ClassicTemplate';
 import { ModernTemplate }    from '@/components/resume/templates/ModernTemplate';
@@ -27,7 +27,7 @@ const TEMPLATE_MAP: Record<string, React.ComponentType<{ data: ResumeData }>> = 
 
 export function buildResumeHtml(data: ResumeData, options?: { compact?: boolean }): string {
   const Template = TEMPLATE_MAP[data.settings.template] ?? ClassicTemplate;
-  const body = renderToStaticMarkup(React.createElement(Template, { data }));
+  const body = ReactDOMServer.renderToStaticMarkup(React.createElement(Template, { data }));
   const isCompact = options?.compact ?? false;
 
   return `<!DOCTYPE html>
