@@ -8,24 +8,42 @@ export const dynamic = 'force-dynamic';
 const CHROMIUM_PACK_URL =
   'https://github.com/Sparticuz/chromium/releases/download/v133.0.0/chromium-v133.0.0-pack.tar';
 
+interface ChromiumModule {
+  args: string[];
+  defaultViewport: { width: number; height: number };
+  executablePath: (packUrl?: string) => Promise<string>;
+  headless: boolean | 'shell';
+  default?: ChromiumModule;
+}
+
+interface PuppeteerModule {
+  launch: (options: {
+    args?: string[];
+    defaultViewport?: { width: number; height: number };
+    executablePath?: string;
+    headless?: boolean | 'shell';
+  }) => Promise<unknown>;
+  default?: PuppeteerModule;
+}
+
 async function getBrowser() {
   const isServerless = Boolean(
     process.env.VERCEL || process.env.NODE_ENV === 'production' || process.env.AWS_EXECUTION_ENV
   );
 
   if (isServerless) {
-    let chromiumPkg: any;
+    let chromiumPkg: ChromiumModule;
     try {
       const minMod = '@sparticuz/chromium-min';
-      chromiumPkg = await import(/* webpackIgnore: true */ minMod);
+      chromiumPkg = (await import(/* webpackIgnore: true */ minMod)) as ChromiumModule;
     } catch {
       const stdMod = '@sparticuz/chromium';
-      chromiumPkg = await import(/* webpackIgnore: true */ stdMod);
+      chromiumPkg = (await import(/* webpackIgnore: true */ stdMod)) as ChromiumModule;
     }
     const chromium = chromiumPkg.default || chromiumPkg;
 
     const pupMod = 'puppeteer-core';
-    const puppeteerPkg = await import(/* webpackIgnore: true */ pupMod);
+    const puppeteerPkg = (await import(/* webpackIgnore: true */ pupMod)) as PuppeteerModule;
     const puppeteer = puppeteerPkg.default || puppeteerPkg;
 
     let executablePath: string;
@@ -46,7 +64,7 @@ async function getBrowser() {
 
   // Local development: use puppeteer-core with a local Chrome/Edge install
   const pupMod = 'puppeteer-core';
-  const puppeteerPkg = await import(/* webpackIgnore: true */ pupMod);
+  const puppeteerPkg = (await import(/* webpackIgnore: true */ pupMod)) as PuppeteerModule;
   const puppeteer = puppeteerPkg.default || puppeteerPkg;
 
   if (process.env.CHROME_PATH) {
