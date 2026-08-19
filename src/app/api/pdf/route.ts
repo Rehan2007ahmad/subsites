@@ -32,18 +32,10 @@ async function getBrowser() {
   );
 
   if (isServerless) {
-    let chromiumPkg: ChromiumModule;
-    try {
-      const minMod = '@sparticuz/chromium-min';
-      chromiumPkg = (await import(/* webpackIgnore: true */ minMod)) as ChromiumModule;
-    } catch {
-      const stdMod = '@sparticuz/chromium';
-      chromiumPkg = (await import(/* webpackIgnore: true */ stdMod)) as ChromiumModule;
-    }
+    const chromiumPkg = await import('@sparticuz/chromium-min');
     const chromium = chromiumPkg.default || chromiumPkg;
 
-    const pupMod = 'puppeteer-core';
-    const puppeteerPkg = (await import(/* webpackIgnore: true */ pupMod)) as PuppeteerModule;
+    const puppeteerPkg = await import('puppeteer-core');
     const puppeteer = puppeteerPkg.default || puppeteerPkg;
 
     let executablePath: string;
@@ -63,8 +55,7 @@ async function getBrowser() {
   }
 
   // Local development: use puppeteer-core with a local Chrome/Edge install
-  const pupMod = 'puppeteer-core';
-  const puppeteerPkg = (await import(/* webpackIgnore: true */ pupMod)) as PuppeteerModule;
+  const puppeteerPkg = await import('puppeteer-core');
   const puppeteer = puppeteerPkg.default || puppeteerPkg;
 
   if (process.env.CHROME_PATH) {
