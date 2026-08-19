@@ -17,9 +17,9 @@ export function ModernTemplate({ data }: TemplateProps) {
     </h2>
   );
 
-  const fontCss = settings.fontFamily === 'Georgia' ? 'Georgia, serif' :
-                  settings.fontFamily === 'Roboto' ? 'Roboto, sans-serif' :
-                  settings.fontFamily === 'Lato' ? 'Lato, sans-serif' :
+  const fontCss = settings?.fontFamily === 'Georgia' ? 'Georgia, serif' :
+                  settings?.fontFamily === 'Roboto' ? 'Roboto, sans-serif' :
+                  settings?.fontFamily === 'Lato' ? 'Lato, sans-serif' :
                   'Inter, Arial, sans-serif';
 
   return (
