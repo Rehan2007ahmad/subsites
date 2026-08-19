@@ -7,18 +7,9 @@ const nextConfig: NextConfig = {
     formats: ['image/webp', 'image/avif'],
   },
 
-  // Required for @sparticuz/chromium on Vercel
-  // Prevents webpack from trying to bundle native binaries
-  serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium'],
-
-  webpack(config) {
-    // Prevent webpack from bundling puppeteer's native .node files
-    config.externals = config.externals || [];
-    if (Array.isArray(config.externals)) {
-      config.externals.push('puppeteer-core', '@sparticuz/chromium');
-    }
-    return config;
-  },
+  // Required for @sparticuz/chromium-min on Vercel
+  // Prevents Next.js / Webpack / Turbopack from bundling native binaries or chromium packs
+  serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium-min', '@sparticuz/chromium'],
 
   async headers() {
     return [
