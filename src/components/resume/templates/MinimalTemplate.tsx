@@ -148,8 +148,13 @@ export function MinimalTemplate({ data }: TemplateProps) {
     ) : null,
   };
 
+  const fontCss = settings.fontFamily === 'Georgia' ? 'Georgia, serif' :
+                  settings.fontFamily === 'Roboto' ? 'Roboto, sans-serif' :
+                  settings.fontFamily === 'Lato' ? 'Lato, sans-serif' :
+                  'Inter, Arial, sans-serif';
+
   return (
-    <div className="bg-white w-full min-h-full px-10 py-10" style={{ fontFamily: settings.fontFamily === 'Georgia' ? 'Georgia, serif' : 'Arial, sans-serif' }}>
+    <div className="bg-white w-full min-h-full px-10 py-10" style={{ fontFamily: fontCss }}>
       {/* Header */}
       <div className="mb-1">
         <h1 className="text-3xl font-light tracking-tight text-gray-900">{personal.fullName || 'Your Name'}</h1>

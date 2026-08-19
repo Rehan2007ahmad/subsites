@@ -25,9 +25,10 @@ const TEMPLATE_MAP: Record<string, React.ComponentType<{ data: ResumeData }>> = 
   student:   StudentTemplate,
 };
 
-export function buildResumeHtml(data: ResumeData): string {
+export function buildResumeHtml(data: ResumeData, options?: { compact?: boolean }): string {
   const Template = TEMPLATE_MAP[data.settings.template] ?? ClassicTemplate;
   const body = renderToStaticMarkup(React.createElement(Template, { data }));
+  const isCompact = options?.compact ?? false;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -35,17 +36,39 @@ export function buildResumeHtml(data: ResumeData): string {
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Resume</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
-    /* ── Reset ──────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── Print / Page Setup ─────────────────────────────────── */
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     html, body {
       width: 794px;
-      background: #fff;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-      font-family: Arial, Helvetica, sans-serif;
+      min-height: 1123px;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 0;
     }
+
+    /* ── Font Family Helpers ───────────────────────────────── */
+    .font-inter   { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; }
+    .font-georgia { font-family: 'Georgia', serif !important; }
+    .font-roboto  { font-family: 'Roboto', system-ui, -apple-system, sans-serif !important; }
+    .font-lato    { font-family: 'Lato', system-ui, -apple-system, sans-serif !important; }
 
     /* ── Tailwind utility classes used by the templates ─────── */
     /* Layout */
@@ -184,13 +207,29 @@ export function buildResumeHtml(data: ResumeData): string {
     /* Opacity */
     .opacity-30  { opacity:0.3; }
 
-    /* Page break */
-    section, .mb-5, .space-y-4 > *, .space-y-3 > * {
-      page-break-inside: avoid;
-      break-inside: avoid;
+    /* Page break avoidance */
+    section, .section-block, [data-section],
+    .space-y-4 > *, .space-y-3 > *, .space-y-2 > *,
+    tr, li, .break-inside-avoid {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
     }
+
+    /* ── Compact mode overrides (for smart auto-fitting 1-page) ── */
+    body.resume-compact .mb-5 { margin-bottom: 0.65rem !important; }
+    body.resume-compact .mb-3 { margin-bottom: 0.4rem !important; }
+    body.resume-compact .space-y-4 > * + * { margin-top: 0.5rem !important; }
+    body.resume-compact .space-y-3 > * + * { margin-top: 0.35rem !important; }
+    body.resume-compact .space-y-2 > * + * { margin-top: 0.25rem !important; }
+    body.resume-compact .py-10 { padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
+    body.resume-compact .py-8  { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
+    body.resume-compact .py-6  { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+    body.resume-compact .py-5  { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
+    body.resume-compact .pt-8  { padding-top: 1.25rem !important; }
+    body.resume-compact .px-10 { padding-left: 1.75rem !important; padding-right: 1.75rem !important; }
+    body.resume-compact .px-8  { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
   </style>
 </head>
-<body>${body}</body>
+<body class="${isCompact ? 'resume-compact' : ''}">${body}</body>
 </html>`;
 }

@@ -5,31 +5,46 @@ import { buildResumeHtml } from '@/lib/resumeHtml';
 export const maxDuration = 60; // Vercel: allow up to 60s for PDF generation
 export const dynamic = 'force-dynamic';
 
+const CHROMIUM_PACK_URL =
+  'https://github.com/Sparticuz/chromium/releases/download/v133.0.0/chromium-v133.0.0-pack.tar';
+
 async function getBrowser() {
-  // On Vercel / production: use @sparticuz/chromium
-  // Locally: use the system Chrome / bundled chromium from puppeteer
-  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
-    const chromium = await import('@sparticuz/chromium');
+  const isServerless = Boolean(
+    process.env.VERCEL || process.env.NODE_ENV === 'production' || process.env.AWS_EXECUTION_ENV
+  );
+
+  if (isServerless) {
+    const chromium = await import('@sparticuz/chromium-min');
     const puppeteer = await import('puppeteer-core');
 
-    // chromium.default.args includes all required flags for serverless
+    const executablePath = await chromium.default.executablePath(CHROMIUM_PACK_URL);
+
     const browser = await puppeteer.default.launch({
       args: chromium.default.args,
       defaultViewport: chromium.default.defaultViewport,
-      executablePath: await chromium.default.executablePath(),
+      executablePath: executablePath || (await chromium.default.executablePath()),
       headless: chromium.default.headless,
     });
     return browser;
   }
 
-  // Local development: use puppeteer-core with a local Chrome install
+  // Local development: use puppeteer-core with a local Chrome/Edge install
   const puppeteer = await import('puppeteer-core');
 
-  // Try common Chrome paths across platforms
+  if (process.env.CHROME_PATH) {
+    return await puppeteer.default.launch({
+      executablePath: process.env.CHROME_PATH,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+      headless: true,
+    });
+  }
+
   const chromePaths = [
     // Windows
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
     // macOS
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     // Linux
@@ -45,12 +60,12 @@ async function getBrowser() {
 
   if (!executablePath) {
     throw new Error(
-      'Chrome not found. Install Google Chrome or set CHROME_PATH env variable.'
+      'Chrome executable not found on local machine. Please install Google Chrome or set the CHROME_PATH environment variable.'
     );
   }
 
   const browser = await puppeteer.default.launch({
-    executablePath: process.env.CHROME_PATH || executablePath,
+    executablePath,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -68,72 +83,105 @@ export async function POST(req: NextRequest) {
   let browser;
 
   try {
-    // Parse and validate resume data
     let data: ResumeData;
     try {
       data = await req.json() as ResumeData;
     } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid JSON request payload' }, { status: 400 });
     }
 
     if (!data?.personal || !data?.settings) {
       return NextResponse.json({ error: 'Invalid resume data structure' }, { status: 400 });
     }
 
-    // Build the self-contained HTML
-    const html = buildResumeHtml(data);
+    // Build the initial HTML string
+    const html = buildResumeHtml(data, { compact: false });
 
     // Launch Chromium
     browser = await getBrowser();
     const page = await browser.newPage();
 
-    // A4 at 96 dpi = 794 × 1123 px
+    // Standard A4 dimensions at 96 DPI: 794px width x 1123px height
     await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 });
 
-    // Load HTML — setContent is more reliable than page.goto('data:...')
-    // waitUntil: 'networkidle0' ensures fonts and images finish loading
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    // Set page HTML content and wait for network/DOM load
+    await page.setContent(html, { waitUntil: ['networkidle0', 'domcontentloaded'] });
 
-    // Extra wait for any web fonts or remaining paint
-    await new Promise(r => setTimeout(r, 200));
+    // Ensure all Google Fonts have finished loading
+    await page.evaluate(() => document.fonts?.ready);
 
-    // Generate PDF with exact A4 dimensions, no margins (our HTML handles spacing)
+    // Ensure all image elements are fully loaded
+    await page.evaluate(async () => {
+      const imgs = Array.from(document.querySelectorAll('img'));
+      await Promise.all(
+        imgs.map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        })
+      );
+    });
+
+    // Smart 1-Page Auto-Fit Logic:
+    // Measure actual rendered content height
+    const scrollHeight = await page.evaluate(() => {
+      return Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight
+      );
+    });
+
+    // Standard A4 page height is 1123px.
+    // If the content slightly exceeds 1 page (between 1124px and 1450px),
+    // enable compact mode to intelligently fit everything onto exactly ONE A4 page.
+    if (scrollHeight > 1123 && scrollHeight <= 1450) {
+      await page.evaluate(() => {
+        document.body.classList.add('resume-compact');
+      });
+      await new Promise(r => setTimeout(r, 100));
+    }
+
+    // Generate exact A4 PDF
     const pdfBuffer = await page.pdf({
       format: 'A4',
-      printBackground: true,    // Required for background colors
+      printBackground: true,
       margin: { top: 0, right: 0, bottom: 0, left: 0 },
-      preferCSSPageSize: false,
+      preferCSSPageSize: true,
     });
 
     await browser.close();
     browser = undefined;
 
-    // Stream PDF back to client
-    const name = data.personal.fullName
-      ? `${data.personal.fullName.toLowerCase().replace(/\s+/g, '-')}.pdf`
-      : 'resume-tooleka.pdf';
+    // Sanitize user full name for downloadable filename
+    const sanitizedName = data.personal.fullName
+      ? data.personal.fullName.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      : 'my';
+    const filename = `${sanitizedName}-resume.pdf`;
 
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
-        'Content-Type':        'application/pdf',
-        'Content-Disposition': `attachment; filename="${name}"`,
-        'Content-Length':      String(pdfBuffer.length),
-        'Cache-Control':       'no-store',
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': String(pdfBuffer.length),
+        'Cache-Control': 'no-store, max-age=0',
       },
     });
 
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error('[PDF API] Error:', err);
+    console.error('[PDF API Error]:', err);
 
     if (browser) {
       try { await browser.close(); } catch {}
     }
 
     return NextResponse.json(
-      { error: message },
+      { error: `PDF generation failed: ${message}` },
       { status: 500 }
     );
   }
 }
+

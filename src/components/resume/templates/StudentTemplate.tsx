@@ -175,8 +175,13 @@ export function StudentTemplate({ data }: TemplateProps) {
     ) : null,
   };
 
+  const fontCss = settings.fontFamily === 'Georgia' ? 'Georgia, serif' :
+                  settings.fontFamily === 'Roboto' ? 'Roboto, sans-serif' :
+                  settings.fontFamily === 'Lato' ? 'Lato, sans-serif' :
+                  'Inter, Arial, sans-serif';
+
   return (
-    <div className="bg-white w-full min-h-full" style={{ fontFamily: 'Arial, sans-serif' }}>
+    <div className="bg-white w-full min-h-full" style={{ fontFamily: fontCss }}>
       {/* Header */}
       <div className="px-8 pt-8 pb-5 text-center border-b-4" style={{ borderColor: accent }}>
         {settings.showPhoto && personal.photo && (

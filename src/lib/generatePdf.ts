@@ -30,8 +30,13 @@ export async function generateResumePdf(
 
   // Get the suggested filename from Content-Disposition if available
   const disposition = response.headers.get('Content-Disposition') ?? '';
-  const match = disposition.match(/filename="?([^"]+)"?/);
-  const name = filename ?? match?.[1] ?? 'resume-tooleka.pdf';
+  const match = disposition.match(/filename="?([^";]+)"?/);
+
+  const fallbackName = data.personal?.fullName
+    ? `${data.personal.fullName.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}-resume.pdf`
+    : 'my-resume.pdf';
+
+  const name = filename ?? match?.[1] ?? fallbackName;
 
   // Convert response to blob and trigger download
   const blob = await response.blob();

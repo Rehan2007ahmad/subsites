@@ -129,8 +129,8 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
               ? <HiArrowPath size={13} className="animate-spin" />
               : <HiArrowDownTray size={13} />
             }
-            <span className="hidden sm:inline">Download PDF</span>
-            <span className="sm:hidden">PDF</span>
+            <span className="hidden sm:inline">{pdfLoading ? 'Generating PDF…' : 'Download PDF'}</span>
+            <span className="sm:hidden">{pdfLoading ? 'PDF…' : 'PDF'}</span>
           </button>
 
           {/* More ⋮ */}

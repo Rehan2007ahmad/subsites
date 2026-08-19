@@ -168,8 +168,13 @@ export function ClassicTemplate({ data }: TemplateProps) {
     ) : null,
   };
 
+  const fontCss = settings.fontFamily === 'Georgia' ? 'Georgia, serif' :
+                  settings.fontFamily === 'Roboto' ? 'Roboto, sans-serif' :
+                  settings.fontFamily === 'Lato' ? 'Lato, sans-serif' :
+                  'Inter, Arial, sans-serif';
+
   return (
-    <div className="bg-white w-full min-h-full font-sans text-gray-900" style={{ fontFamily: settings.fontFamily === 'Georgia' ? 'Georgia, serif' : 'Arial, sans-serif' }}>
+    <div className="bg-white w-full min-h-full font-sans text-gray-900" style={{ fontFamily: fontCss }}>
       {/* Header */}
       <div className="px-8 pt-8 pb-5 border-b-2" style={{ borderColor: accent }}>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">{personal.fullName || 'Your Name'}</h1>

@@ -17,8 +17,13 @@ export function ModernTemplate({ data }: TemplateProps) {
     </h2>
   );
 
+  const fontCss = settings.fontFamily === 'Georgia' ? 'Georgia, serif' :
+                  settings.fontFamily === 'Roboto' ? 'Roboto, sans-serif' :
+                  settings.fontFamily === 'Lato' ? 'Lato, sans-serif' :
+                  'Inter, Arial, sans-serif';
+
   return (
-    <div className="bg-white w-full min-h-full font-sans flex flex-col" style={{ fontFamily: 'Arial, sans-serif' }}>
+    <div className="bg-white w-full min-h-full font-sans flex flex-col" style={{ fontFamily: fontCss }}>
       {/* Top header bar */}
       <div className="px-0" style={{ backgroundColor: accent }}>
         <div className="px-6 py-6 text-white">
