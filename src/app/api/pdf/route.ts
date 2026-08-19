@@ -14,25 +14,43 @@ async function getBrowser() {
   );
 
   if (isServerless) {
-    const chromium = await import('@sparticuz/chromium-min');
-    const puppeteer = await import('puppeteer-core');
+    let chromiumPkg: any;
+    try {
+      const minMod = '@sparticuz/chromium-min';
+      chromiumPkg = await import(/* webpackIgnore: true */ minMod);
+    } catch {
+      const stdMod = '@sparticuz/chromium';
+      chromiumPkg = await import(/* webpackIgnore: true */ stdMod);
+    }
+    const chromium = chromiumPkg.default || chromiumPkg;
 
-    const executablePath = await chromium.default.executablePath(CHROMIUM_PACK_URL);
+    const pupMod = 'puppeteer-core';
+    const puppeteerPkg = await import(/* webpackIgnore: true */ pupMod);
+    const puppeteer = puppeteerPkg.default || puppeteerPkg;
 
-    const browser = await puppeteer.default.launch({
-      args: chromium.default.args,
-      defaultViewport: chromium.default.defaultViewport,
-      executablePath: executablePath || (await chromium.default.executablePath()),
-      headless: chromium.default.headless,
+    let executablePath: string;
+    try {
+      executablePath = await chromium.executablePath(CHROMIUM_PACK_URL);
+    } catch {
+      executablePath = await chromium.executablePath();
+    }
+
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath,
+      headless: chromium.headless,
     });
     return browser;
   }
 
   // Local development: use puppeteer-core with a local Chrome/Edge install
-  const puppeteer = await import('puppeteer-core');
+  const pupMod = 'puppeteer-core';
+  const puppeteerPkg = await import(/* webpackIgnore: true */ pupMod);
+  const puppeteer = puppeteerPkg.default || puppeteerPkg;
 
   if (process.env.CHROME_PATH) {
-    return await puppeteer.default.launch({
+    return await puppeteer.launch({
       executablePath: process.env.CHROME_PATH,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
       headless: true,
@@ -64,7 +82,7 @@ async function getBrowser() {
     );
   }
 
-  const browser = await puppeteer.default.launch({
+  const browser = await puppeteer.launch({
     executablePath,
     args: [
       '--no-sandbox',
