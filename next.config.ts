@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   // ─────────────────────────────────────────────────────────────────────────
   // CRITICAL: Prevent the Next.js bundler from processing puppeteer-core and
   // @sparticuz/chromium-min at build time.
-  //
+
   // Without this, Next.js Node File Tracer (NFT) recursively walks thousands
   // of files inside puppeteer-core/lib/esm/ and chromium-min/build/ during
   // "Creating an optimized production build ...", causing Vercel to time out
