@@ -20,16 +20,15 @@ const nextConfig: NextConfig = {
     '@sparticuz/chromium-min',
   ],
 
-  experimental: {
-    // Exclude Chromium binary directories from the output file trace entirely.
-    // NFT would otherwise attempt to copy them into the .next/server bundle.
-    outputFileTracingExcludes: {
-      '/api/pdf': [
-        'node_modules/@sparticuz/chromium-min/**/*',
-        'node_modules/puppeteer-core/.local-chromium/**/*',
-        'node_modules/puppeteer-core/.local-browsers/**/*',
-      ],
-    },
+  // Exclude Chromium binary directories from the output file trace entirely.
+  // NFT would otherwise attempt to copy them into the .next/server bundle,
+  // causing the Vercel build to hang for 45+ minutes.
+  outputFileTracingExcludes: {
+    '/api/pdf': [
+      'node_modules/@sparticuz/chromium-min/**/*',
+      'node_modules/puppeteer-core/.local-chromium/**/*',
+      'node_modules/puppeteer-core/.local-browsers/**/*',
+    ],
   },
 
   async headers() {
