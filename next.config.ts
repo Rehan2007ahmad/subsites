@@ -7,27 +7,43 @@ const nextConfig: NextConfig = {
     formats: ['image/webp', 'image/avif'],
   },
 
-  // Prevent Next.js/Webpack/Turbopack from bundling these packages into the
-  // server bundle. They contain native binaries that must remain as-is in
-  // node_modules and be required at runtime — never inlined or traced by NFT.
+  // ─────────────────────────────────────────────────────────────────────────
+  // CRITICAL: Prevent the Next.js bundler from processing puppeteer-core and
+  // @sparticuz/chromium-min at build time.
   //
-  // Without this, Next.js Node File Tracer (NFT) recursively walks the entire
-  // puppeteer-core and chromium-min trees (hundreds of MB of binaries and .pak
-  // files), causing the Vercel build to hang for 45+ minutes at:
-  //   "Creating an optimized production build ..."
+  // Without this, Next.js Node File Tracer (NFT) recursively walks thousands
+  // of files inside puppeteer-core/lib/esm/ and chromium-min/build/ during
+  // "Creating an optimized production build ...", causing Vercel to time out
+  // at 45 minutes.
+  //
+  // These packages must be required at RUNTIME by Node.js — not bundled.
+  // ─────────────────────────────────────────────────────────────────────────
   serverExternalPackages: [
     'puppeteer-core',
     '@sparticuz/chromium-min',
+    // Transitive deps that must also stay external:
+    '@puppeteer/browsers',
+    'chromium-bidi',
+    'devtools-protocol',
   ],
 
-  // Exclude Chromium binary directories from the output file trace entirely.
-  // NFT would otherwise attempt to copy them into the .next/server bundle,
-  // causing the Vercel build to hang for 45+ minutes.
+  // ─────────────────────────────────────────────────────────────────────────
+  // Exclude Chromium/Puppeteer file trees from NFT output tracing.
+  //
+  // puppeteer-core ships a "browser" field in package.json that points to
+  // an ESM entry (puppeteer-core-browser.js). Even with serverExternalPackages,
+  // NFT can still walk this ESM tree looking for files to include in the
+  // serverless function bundle. These exclusions prevent that entirely.
+  // ─────────────────────────────────────────────────────────────────────────
   outputFileTracingExcludes: {
+    // Apply to the PDF API route
     '/api/pdf': [
-      'node_modules/@sparticuz/chromium-min/**/*',
-      'node_modules/puppeteer-core/.local-chromium/**/*',
-      'node_modules/puppeteer-core/.local-browsers/**/*',
+      './node_modules/@sparticuz/chromium-min/**/*',
+      './node_modules/puppeteer-core/**/*',
+      './node_modules/@puppeteer/browsers/**/*',
+      './node_modules/chromium-bidi/**/*',
+      './node_modules/devtools-protocol/**/*',
+      './node_modules/ws/**/*',
     ],
   },
 

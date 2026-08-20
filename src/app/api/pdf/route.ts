@@ -2,26 +2,86 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { ResumeData } from '@/types/resume';
 import { buildResumeHtml } from '@/lib/resumeHtml';
 
-// Force Node.js runtime — this route MUST NOT run in Edge Runtime.
-// Edge Runtime does not support Puppeteer, child_process, or native binaries.
+// ─────────────────────────────────────────────────────────────────────────────
+// RUNTIME: Force Node.js — this route MUST NOT run as Edge Runtime.
+// Edge Runtime has no support for native binaries, child_process, or fs.
+// ─────────────────────────────────────────────────────────────────────────────
 export const runtime = 'nodejs';
-export const maxDuration = 60; // Vercel: allow up to 60s for PDF generation
+export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Chromium binary pack URL for @sparticuz/chromium-min.
+// Downloaded at RUNTIME on first /api/pdf call — never during next build.
+// ─────────────────────────────────────────────────────────────────────────────
 const CHROMIUM_PACK_URL =
   'https://github.com/Sparticuz/chromium/releases/download/v133.0.0/chromium-v133.0.0-pack.tar';
 
-async function getBrowser() {
-  const isServerless = Boolean(
-    process.env.VERCEL || process.env.NODE_ENV === 'production' || process.env.AWS_EXECUTION_ENV
+// ─────────────────────────────────────────────────────────────────────────────
+// Minimal type-safe interfaces for the dynamically loaded packages.
+// We use require() at runtime so the static bundler (Webpack / Turbopack / NFT)
+// never tries to trace, bundle, or walk the puppeteer-core ESM tree.
+// ─────────────────────────────────────────────────────────────────────────────
+interface ChromiumModule {
+  args: string[];
+  defaultViewport: { width: number; height: number } | null;
+  executablePath(packUrl?: string): Promise<string>;
+  headless: boolean;
+}
+
+interface BrowserPage {
+  setViewport(opts: { width: number; height: number; deviceScaleFactor?: number }): Promise<void>;
+  setContent(html: string, opts?: { waitUntil?: string[] }): Promise<void>;
+  evaluate<T>(fn: (...args: unknown[]) => T | Promise<T>): Promise<T>;
+  pdf(opts?: {
+    format?: string;
+    printBackground?: boolean;
+    margin?: { top?: number; right?: number; bottom?: number; left?: number };
+    preferCSSPageSize?: boolean;
+  }): Promise<Buffer>;
+  close(): Promise<void>;
+}
+
+interface BrowserInstance {
+  newPage(): Promise<BrowserPage>;
+  close(): Promise<void>;
+}
+
+interface PuppeteerModule {
+  launch(opts: {
+    executablePath?: string;
+    args?: string[];
+    defaultViewport?: { width: number; height: number } | null;
+    headless?: boolean;
+  }): Promise<BrowserInstance>;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// getBrowser()
+//
+// Uses require() instead of await import() so that Webpack, Turbopack, and
+// Next.js Node File Tracer (NFT) cannot statically analyze the dependency.
+//
+// puppeteer-core v24 ships a "browser" field in package.json pointing to
+// puppeteer-core-browser.js (ESM). The bundler resolves this field even for
+// server code, causing NFT to walk thousands of files in lib/esm/ and time
+// out Vercel builds at 45 minutes.
+//
+// require() is opaque to static analysis — the packages are externalized via
+// serverExternalPackages in next.config.ts and Node.js resolves them at
+// request time from node_modules.
+// ─────────────────────────────────────────────────────────────────────────────
+async function getBrowser(): Promise<BrowserInstance> {
+  const isVercel = Boolean(
+    process.env.VERCEL || process.env.AWS_EXECUTION_ENV
   );
 
-  if (isServerless) {
-    const chromiumPkg = await import('@sparticuz/chromium-min');
-    const chromium = chromiumPkg.default || chromiumPkg;
-
-    const puppeteerPkg = await import('puppeteer-core');
-    const puppeteer = puppeteerPkg.default || puppeteerPkg;
+  if (isVercel) {
+    // Vercel / serverless: use @sparticuz/chromium-min with remote binary pack
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const chromium = require('@sparticuz/chromium-min') as ChromiumModule;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const puppeteer = require('puppeteer-core') as PuppeteerModule;
 
     let executablePath: string;
     try {
@@ -30,53 +90,45 @@ async function getBrowser() {
       executablePath = await chromium.executablePath();
     }
 
-    const browser = await puppeteer.launch({
+    return puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath,
       headless: chromium.headless,
     });
-    return browser;
   }
 
-  // Local development: use puppeteer-core with a local Chrome/Edge install
-  const puppeteerPkg = await import('puppeteer-core');
-  const puppeteer = puppeteerPkg.default || puppeteerPkg;
+  // ── Local development ────────────────────────────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const puppeteer = require('puppeteer-core') as PuppeteerModule;
 
-  if (process.env.CHROME_PATH) {
-    return await puppeteer.launch({
-      executablePath: process.env.CHROME_PATH,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-      headless: true,
-    });
-  }
-
-  const chromePaths = [
-    // Windows
-    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-    // macOS
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    // Linux
-    '/usr/bin/google-chrome',
-    '/usr/bin/chromium-browser',
-    '/usr/bin/chromium',
-  ];
-
-  const fs = await import('fs');
-  const executablePath = chromePaths.find(p => {
-    try { return fs.existsSync(p); } catch { return false; }
-  });
+  const executablePath =
+    process.env.CHROME_PATH ||
+    (() => {
+      const { existsSync } = require('fs') as typeof import('fs');
+      const candidates = [
+        // Windows
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+        'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+        // macOS
+        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        // Linux
+        '/usr/bin/google-chrome',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/chromium',
+      ];
+      return candidates.find((p) => { try { return existsSync(p); } catch { return false; } });
+    })();
 
   if (!executablePath) {
     throw new Error(
-      'Chrome executable not found on local machine. Please install Google Chrome or set the CHROME_PATH environment variable.'
+      'Chrome not found. Install Google Chrome or set CHROME_PATH in your .env.local.'
     );
   }
 
-  const browser = await puppeteer.launch({
+  return puppeteer.launch({
     executablePath,
     args: [
       '--no-sandbox',
@@ -88,16 +140,18 @@ async function getBrowser() {
     ],
     headless: true,
   });
-  return browser;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/pdf
+// ─────────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  let browser;
+  let browser: BrowserInstance | undefined;
 
   try {
     let data: ResumeData;
     try {
-      data = await req.json() as ResumeData;
+      data = (await req.json()) as ResumeData;
     } catch {
       return NextResponse.json({ error: 'Invalid JSON request payload' }, { status: 400 });
     }
@@ -106,56 +160,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid resume data structure' }, { status: 400 });
     }
 
-    // Build the initial HTML string
+    // Generate the HTML string server-side (pure TypeScript, no React DOM)
     const html = buildResumeHtml(data, { compact: false });
 
-    // Launch Chromium
+    // Launch Chromium — only happens at request time, never during next build
     browser = await getBrowser();
     const page = await browser.newPage();
 
-    // Standard A4 dimensions at 96 DPI: 794px width x 1123px height
+    // A4 at 96 DPI: 794 × 1123 px
     await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 });
 
-    // Set page HTML content and wait for network/DOM load
+    // Load HTML and wait for fonts + network to settle
     await page.setContent(html, { waitUntil: ['networkidle0', 'domcontentloaded'] });
 
-    // Ensure all Google Fonts have finished loading
+    // Wait for Google Fonts to finish loading
     await page.evaluate(() => document.fonts?.ready);
 
-    // Ensure all image elements are fully loaded
+    // Wait for all images (e.g. base64 profile photo) to load
     await page.evaluate(async () => {
       const imgs = Array.from(document.querySelectorAll('img'));
       await Promise.all(
-        imgs.map(img => {
-          if (img.complete) return Promise.resolve();
-          return new Promise((resolve) => {
-            img.onload = resolve;
-            img.onerror = resolve;
+        imgs.map((img) => {
+          if ((img as HTMLImageElement).complete) return Promise.resolve();
+          return new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
           });
         })
       );
     });
 
-    // Smart 1-Page Auto-Fit Logic:
-    // Measure actual rendered content height
-    const scrollHeight = await page.evaluate(() => {
-      return Math.max(
-        document.documentElement.scrollHeight,
-        document.body.scrollHeight
-      );
-    });
+    // Smart 1-page auto-fit:
+    // If content overflows by less than ~30%, apply compact spacing to fit 1 page.
+    const scrollHeight = await page.evaluate(() =>
+      Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
+    );
 
-    // Standard A4 page height is 1123px.
-    // If the content slightly exceeds 1 page (between 1124px and 1450px),
-    // enable compact mode to intelligently fit everything onto exactly ONE A4 page.
     if (scrollHeight > 1123 && scrollHeight <= 1450) {
-      await page.evaluate(() => {
-        document.body.classList.add('resume-compact');
-      });
-      await new Promise(r => setTimeout(r, 100));
+      await page.evaluate(() => document.body.classList.add('resume-compact'));
+      // Allow compact CSS to re-layout
+      await new Promise<void>((r) => setTimeout(r, 120));
     }
 
-    // Generate exact A4 PDF
+    // Generate exact A4 PDF — margins controlled by the resume CSS (@page)
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
@@ -166,9 +213,13 @@ export async function POST(req: NextRequest) {
     await browser.close();
     browser = undefined;
 
-    // Sanitize user full name for downloadable filename
+    // Safe filename: "john-doe-resume.pdf"
     const sanitizedName = data.personal.fullName
-      ? data.personal.fullName.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      ? data.personal.fullName
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
       : 'my';
     const filename = `${sanitizedName}-resume.pdf`;
 
@@ -181,19 +232,14 @@ export async function POST(req: NextRequest) {
         'Cache-Control': 'no-store, max-age=0',
       },
     });
-
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[PDF API Error]:', err);
-
     if (browser) {
-      try { await browser.close(); } catch {}
+      try {
+        await browser.close();
+      } catch {}
     }
-
-    return NextResponse.json(
-      { error: `PDF generation failed: ${message}` },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: `PDF generation failed: ${message}` }, { status: 500 });
   }
 }
-
