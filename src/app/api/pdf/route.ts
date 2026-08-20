@@ -2,29 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { ResumeData } from '@/types/resume';
 import { buildResumeHtml } from '@/lib/resumeHtml';
 
+// Force Node.js runtime — this route MUST NOT run in Edge Runtime.
+// Edge Runtime does not support Puppeteer, child_process, or native binaries.
+export const runtime = 'nodejs';
 export const maxDuration = 60; // Vercel: allow up to 60s for PDF generation
 export const dynamic = 'force-dynamic';
 
 const CHROMIUM_PACK_URL =
   'https://github.com/Sparticuz/chromium/releases/download/v133.0.0/chromium-v133.0.0-pack.tar';
-
-interface ChromiumModule {
-  args: string[];
-  defaultViewport: { width: number; height: number };
-  executablePath: (packUrl?: string) => Promise<string>;
-  headless: boolean | 'shell';
-  default?: ChromiumModule;
-}
-
-interface PuppeteerModule {
-  launch: (options: {
-    args?: string[];
-    defaultViewport?: { width: number; height: number };
-    executablePath?: string;
-    headless?: boolean | 'shell';
-  }) => Promise<unknown>;
-  default?: PuppeteerModule;
-}
 
 async function getBrowser() {
   const isServerless = Boolean(
