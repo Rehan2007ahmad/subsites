@@ -1106,104 +1106,106 @@ function renderExecutive(data: ResumeData): string {
   const rightContent = (sectionOrder || []).map(key => rightSections[key] || '').join('');
 
   return `
-    <div class="bg-white w-full flex" style="font-family: ${fontCss}; height: 1123px; overflow: hidden;">
-      <!-- LEFT DARK SIDEBAR (36%) -->
-      <div class="w-[36%] shrink-0 flex flex-col overflow-hidden text-white" style="background-color: ${darkBg};">
-        ${(settings?.showPhoto && personal?.photo) ? `
-          <div class="w-full shrink-0" style="height: 230px;">
-            <img src="${personal.photo}" alt="${esc(personal.fullName)}" class="w-full h-full object-cover block" />
-          </div>
-        ` : `
-          <div class="w-full shrink-0 flex items-center justify-center bg-[#181818]" style="height: 160px;">
-            <span class="text-[28px] font-bold text-[#444444] tracking-wider uppercase">
-              ${esc((personal?.fullName || 'AB').slice(0, 2))}
-            </span>
-          </div>
-        `}
-
-        <div class="px-6 py-5 flex flex-col gap-5 overflow-hidden flex-1">
-          ${summary ? `
-            <div>
-              <h3 class="uppercase tracking-[0.22em] font-bold text-[#999999] mb-2 text-[11px]">
-                About Me
-              </h3>
-              <p class="text-[9.5px] text-[#cccccc] leading-relaxed">
-                ${esc(summary)}
-              </p>
+    <table cellpadding="0" cellspacing="0" border="0" style="width: 794px; height: 1123px; border-collapse: collapse; table-layout: fixed; margin: 0; padding: 0; background: #ffffff; font-family: ${fontCss};">
+      <tr>
+        <!-- LEFT DARK SIDEBAR (285px) -->
+        <td valign="top" style="width: 285px; min-width: 285px; max-width: 285px; height: 1123px; background-color: ${darkBg}; color: #ffffff; padding: 0; vertical-align: top; overflow: hidden;">
+          ${(settings?.showPhoto && personal?.photo) ? `
+            <div style="width: 285px; height: 230px; overflow: hidden; display: block; margin: 0; padding: 0;">
+              <img src="${personal.photo}" alt="${esc(personal.fullName)}" style="width: 285px; height: 230px; object-fit: cover; display: block; margin: 0; max-width: none;" />
             </div>
-          ` : ''}
+          ` : `
+            <div style="width: 285px; height: 150px; display: flex; align-items: center; justify-content: center; background-color: #181818; margin: 0;">
+              <span style="font-size: 28px; font-weight: bold; color: #444444; letter-spacing: 0.1em;">
+                ${esc((personal?.fullName || 'AB').slice(0, 2).toUpperCase())}
+              </span>
+            </div>
+          `}
 
-          ${(skills && skills.length > 0) ? `
-            <div>
-              <h3 class="uppercase tracking-[0.22em] font-bold text-[#999999] mb-2.5 text-[11px]">
-                Skills
-              </h3>
-              <div class="space-y-2">
-                ${skills.map((sk, index) => {
-                  const defaultWidths = [85, 70, 90, 60, 75, 80, 65, 95];
-                  const barWidth = defaultWidths[index % defaultWidths.length];
-                  return `
-                    <div class="flex items-center justify-between gap-2">
-                      <p class="text-[9.5px] text-[#cccccc] shrink-0 truncate max-w-[48%]">
-                        ${esc(sk.name)}:
+          <div style="padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; overflow: hidden;">
+            ${summary ? `
+              <div>
+                <h3 style="text-transform: uppercase; letter-spacing: 0.22em; font-weight: 700; color: #999999; margin-bottom: 6px; font-size: 11px;">
+                  About Me
+                </h3>
+                <p style="font-size: 9.5px; color: #cccccc; line-height: 1.55; margin: 0;">
+                  ${esc(summary)}
+                </p>
+              </div>
+            ` : ''}
+
+            ${(skills && skills.length > 0) ? `
+              <div>
+                <h3 style="text-transform: uppercase; letter-spacing: 0.22em; font-weight: 700; color: #999999; margin-bottom: 8px; font-size: 11px;">
+                  Skills
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  ${skills.map((sk, index) => {
+                    const defaultWidths = [85, 70, 90, 60, 75, 80, 65, 95];
+                    const barWidth = defaultWidths[index % defaultWidths.length];
+                    return `
+                      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <p style="font-size: 9.5px; color: #cccccc; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">
+                          ${esc(sk.name)}:
+                        </p>
+                        <div style="width: 100px; height: 4px; background-color: #3a3a3a; border-radius: 9999px; overflow: hidden; flex-shrink: 0;">
+                          <div style="height: 100%; background-color: #8c8c8c; border-radius: 9999px; width: ${barWidth}%;"></div>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            ${(languages && languages.length > 0) ? `
+              <div>
+                <h3 style="text-transform: uppercase; letter-spacing: 0.22em; font-weight: 700; color: #999999; margin-bottom: 6px; font-size: 11px;">
+                  Languages
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                  ${languages.map(l => `
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                      <p style="font-size: 9.5px; color: #cccccc; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">
+                        ${esc(l.language)}:
                       </p>
-                      <div class="flex-1 max-w-[48%] h-1 bg-[#3a3a3a] rounded-full overflow-hidden">
-                        <div class="h-full bg-[#8c8c8c] rounded-full" style="width: ${barWidth}%;"></div>
+                      <div style="width: 100px; height: 4px; background-color: #3a3a3a; border-radius: 9999px; overflow: hidden; flex-shrink: 0;">
+                        <div style="height: 100%; background-color: #8c8c8c; border-radius: 9999px; width: ${profWidth[l.proficiency] ?? 70}%;"></div>
                       </div>
                     </div>
-                  `;
-                }).join('')}
+                  `).join('')}
+                </div>
               </div>
-            </div>
-          ` : ''}
+            ` : ''}
+          </div>
+        </td>
 
-          ${(languages && languages.length > 0) ? `
-            <div>
-              <h3 class="uppercase tracking-[0.22em] font-bold text-[#999999] mb-2 text-[11px]">
-                Languages
-              </h3>
-              <div class="space-y-1.5">
-                ${languages.map(l => `
-                  <div class="flex items-center justify-between gap-2">
-                    <p class="text-[9.5px] text-[#cccccc] shrink-0 truncate max-w-[48%]">
-                      ${esc(l.language)}:
-                    </p>
-                    <div class="flex-1 max-w-[48%] h-1 bg-[#3a3a3a] rounded-full overflow-hidden">
-                      <div class="h-full bg-[#8c8c8c] rounded-full" style="width: ${profWidth[l.proficiency] ?? 70}%;"></div>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
+        <!-- RIGHT COLUMN (509px) -->
+        <td valign="top" style="width: 509px; min-width: 509px; max-width: 509px; height: 1123px; background-color: #ffffff; color: #222222; padding: 0; vertical-align: top; overflow: hidden;">
+          <div style="padding-top: 32px; padding-bottom: 18px; padding-left: 28px; padding-right: 28px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+            <div style="position: relative; display: inline-block; margin-bottom: 10px;">
+              <div style="position: absolute; left: -12px; right: -12px; bottom: 3px; height: 14px; background-color: ${accent}; z-index: 0; opacity: 0.95;"></div>
+              <h1 style="position: relative; z-index: 1; font-weight: 900; text-transform: uppercase; color: #222222; letter-spacing: 0.08em; line-height: 1; font-size: 26px; margin: 0;">
+                ${esc(personal?.fullName || 'YOUR NAME')}
+              </h1>
             </div>
-          ` : ''}
-        </div>
-      </div>
 
-      <!-- RIGHT COLUMN (64%) -->
-      <div class="flex-1 flex flex-col overflow-hidden bg-white">
-        <div class="pt-9 pb-6 px-8 flex flex-col items-center text-center">
-          <div class="relative inline-block mb-3.5">
-            <div class="absolute left-[-12px] right-[-12px] bottom-1 h-3.5 -z-0 opacity-95" style="background-color: ${accent};"></div>
-            <h1 class="relative z-10 font-black uppercase text-[#222222] tracking-[0.08em] leading-none" style="font-size: 27px;">
-              ${esc(personal?.fullName || 'YOUR NAME')}
-            </h1>
+            <div style="font-size: 9.5px; color: #777777; line-height: 1.5;">
+              ${personal?.location ? `<p style="margin: 0;">${esc(personal.location)}</p>` : ''}
+              ${personal?.phone ? `<p style="margin: 0;">phone: ${esc(personal.phone)}</p>` : ''}
+              ${personal?.email ? `<p style="margin: 0;">email: ${esc(personal.email)}</p>` : ''}
+              ${personal?.website ? `<p style="margin: 0;">${esc(personal.website)}</p>` : ''}
+              ${personal?.linkedin ? `<p style="margin: 0;">${esc(personal.linkedin)}</p>` : ''}
+              ${personal?.github ? `<p style="margin: 0;">${esc(personal.github)}</p>` : ''}
+            </div>
           </div>
 
-          <div class="space-y-0.5 text-[9.5px] text-[#777777] leading-relaxed">
-            ${personal?.location ? `<p>${esc(personal.location)}</p>` : ''}
-            ${personal?.phone ? `<p>phone: ${esc(personal.phone)}</p>` : ''}
-            ${personal?.email ? `<p>email: ${esc(personal.email)}</p>` : ''}
-            ${personal?.website ? `<p>${esc(personal.website)}</p>` : ''}
-            ${personal?.linkedin ? `<p>${esc(personal.linkedin)}</p>` : ''}
-            ${personal?.github ? `<p>${esc(personal.github)}</p>` : ''}
+          <div style="padding-left: 28px; padding-right: 28px; padding-top: 6px; padding-bottom: 24px; overflow: hidden;">
+            ${rightContent}
           </div>
-        </div>
-
-        <div class="px-8 pt-2 pb-6 flex-1 overflow-hidden">
-          ${rightContent}
-        </div>
-      </div>
-    </div>
+        </td>
+      </tr>
+    </table>
   `;
 }
 
