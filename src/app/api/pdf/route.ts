@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import puppeteer from 'puppeteer-core';
-import chromium from '@sparticuz/chromium-min';
-
 import type { ResumeData } from '@/types/resume';
 import { buildResumeHtml } from '@/lib/resumeHtml';
 
@@ -13,6 +10,9 @@ const CHROMIUM_PACK_URL =
   'https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar';
 
 function findLocalChrome(): string | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require('fs') as typeof import('fs');
+
   const candidates = [
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
@@ -28,9 +28,6 @@ function findLocalChrome(): string | undefined {
     '/usr/bin/chromium-browser',
   ];
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const fs = require('fs') as typeof import('fs');
-
   for (const path of candidates) {
     try {
       if (fs.existsSync(path)) {
@@ -45,10 +42,23 @@ function findLocalChrome(): string | undefined {
 }
 
 async function launchBrowser() {
+  /*
+   * IMPORTANT:
+   * These imports are intentionally inside the function.
+   *
+   * This prevents Turbopack from eagerly processing the
+   * Puppeteer/Chromium dependency tree while compiling
+   * /api/pdf.
+   */
+
+  const { default: puppeteer } = await import(
+    'puppeteer-core'
+  );
+
   const isVercel = Boolean(process.env.VERCEL);
 
   // ============================================================
-  // LOCAL DEVELOPMENT
+  // LOCAL
   // ============================================================
 
   if (!isVercel) {
@@ -90,7 +100,12 @@ async function launchBrowser() {
   // VERCEL
   // ============================================================
 
-  console.log('[PDF] Vercel environment detected');
+  console.log('[PDF] Vercel detected');
+
+  const { default: chromium } = await import(
+    '@sparticuz/chromium-min'
+  );
+
   console.log('[PDF] Loading Chromium 149...');
 
   const executablePath =
@@ -106,28 +121,28 @@ async function launchBrowser() {
 
     args: chromium.args,
 
+    headless: true,
+
     defaultViewport: {
       width: 794,
       height: 1123,
       deviceScaleFactor: 1,
     },
-
-    headless: true,
   });
 }
 
 export async function POST(req: NextRequest) {
   let browser: Awaited<
-    ReturnType<typeof puppeteer.launch>
+    ReturnType<typeof launchBrowser>
   > | null = null;
 
   try {
-    console.log('[PDF] =============================');
-    console.log('[PDF] PDF request received');
-    console.log('[PDF] =============================');
+    console.log('[PDF] ===========================');
+    console.log('[PDF] Request received');
+    console.log('[PDF] ===========================');
 
     // ==========================================================
-    // READ REQUEST
+    // Parse request
     // ==========================================================
 
     let data: ResumeData;
@@ -162,7 +177,7 @@ export async function POST(req: NextRequest) {
     );
 
     // ==========================================================
-    // BUILD HTML
+    // Generate HTML
     // ==========================================================
 
     console.log('[PDF] Building HTML...');
@@ -171,7 +186,7 @@ export async function POST(req: NextRequest) {
       compact: false,
     });
 
-    if (!html || !html.trim()) {
+    if (!html?.trim()) {
       throw new Error(
         'buildResumeHtml() returned empty HTML.'
       );
@@ -184,7 +199,7 @@ export async function POST(req: NextRequest) {
     );
 
     // ==========================================================
-    // LAUNCH CHROME
+    // Launch browser
     // ==========================================================
 
     console.log('[PDF] Launching browser...');
@@ -194,7 +209,7 @@ export async function POST(req: NextRequest) {
     console.log('[PDF] Browser launched');
 
     // ==========================================================
-    // CREATE PAGE
+    // Create page
     // ==========================================================
 
     const page = await browser.newPage();
@@ -208,7 +223,7 @@ export async function POST(req: NextRequest) {
     console.log('[PDF] Page created');
 
     // ==========================================================
-    // LOAD HTML
+    // Load HTML
     // ==========================================================
 
     await page.setContent(html, {
@@ -218,7 +233,7 @@ export async function POST(req: NextRequest) {
     console.log('[PDF] HTML loaded');
 
     // ==========================================================
-    // WAIT FOR FONTS
+    // Fonts
     // ==========================================================
 
     await page.evaluate(async () => {
@@ -230,7 +245,7 @@ export async function POST(req: NextRequest) {
     console.log('[PDF] Fonts ready');
 
     // ==========================================================
-    // WAIT FOR IMAGES
+    // Images
     // ==========================================================
 
     await page.evaluate(async () => {
@@ -265,13 +280,13 @@ export async function POST(req: NextRequest) {
 
     console.log('[PDF] Images ready');
 
-    // Give Chrome a moment to finish layout.
+    // Allow browser layout to settle.
     await new Promise<void>((resolve) => {
       setTimeout(resolve, 100);
     });
 
     // ==========================================================
-    // MEASURE CONTENT
+    // Measure content
     // ==========================================================
 
     let contentHeight = await page.evaluate(() =>
@@ -287,7 +302,7 @@ export async function POST(req: NextRequest) {
     );
 
     // ==========================================================
-    // COMPACT MODE
+    // Compact mode
     // ==========================================================
 
     if (contentHeight > 1123 && contentHeight <= 1500) {
@@ -317,10 +332,10 @@ export async function POST(req: NextRequest) {
     }
 
     // ==========================================================
-    // CREATE PDF
+    // Generate PDF
     // ==========================================================
 
-    console.log('[PDF] Creating PDF...');
+    console.log('[PDF] Generating PDF...');
 
     const pdf = await page.pdf({
       format: 'A4',
@@ -338,22 +353,20 @@ export async function POST(req: NextRequest) {
     });
 
     console.log(
-      '[PDF] PDF created:',
+      '[PDF] PDF generated:',
       pdf.byteLength,
       'bytes'
     );
 
     // ==========================================================
-    // CLOSE BROWSER
+    // Close browser
     // ==========================================================
 
     await browser.close();
     browser = null;
 
-    console.log('[PDF] Browser closed');
-
     // ==========================================================
-    // FILENAME
+    // Filename
     // ==========================================================
 
     const sanitizedName = (
@@ -368,12 +381,14 @@ export async function POST(req: NextRequest) {
       `${sanitizedName || 'my'}-resume.pdf`;
 
     // ==========================================================
-    // RETURN PDF
+    // Uint8Array → ArrayBuffer
     // ==========================================================
 
-    // Convert Uint8Array -> ArrayBuffer so NextResponse
-    // accepts it cleanly with Next.js/TypeScript.
     const pdfArrayBuffer = new Uint8Array(pdf).buffer;
+
+    // ==========================================================
+    // Response
+    // ==========================================================
 
     return new NextResponse(pdfArrayBuffer, {
       status: 200,
@@ -396,22 +411,10 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error(
-      '[PDF] ============================='
-    );
-
-    console.error(
-      '[PDF] PDF GENERATION FAILED'
-    );
-
-    console.error(
-      '[PDF]',
-      error
-    );
-
-    console.error(
-      '[PDF] ============================='
-    );
+    console.error('[PDF] ===========================');
+    console.error('[PDF] GENERATION FAILED');
+    console.error('[PDF]', error);
+    console.error('[PDF] ===========================');
 
     if (browser) {
       try {
