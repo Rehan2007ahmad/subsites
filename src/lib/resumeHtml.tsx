@@ -961,6 +961,252 @@ function renderStudent(data: ResumeData): string {
   `;
 }
 
+// ── 6. Executive Template ───────────────────────────────────────
+function renderExecutive(data: ResumeData): string {
+  const {
+    personal,
+    summary,
+    experience,
+    education,
+    skills,
+    projects,
+    certifications,
+    languages,
+    achievements,
+    interests,
+    settings,
+    sectionOrder,
+  } = data;
+  const accent = settings?.accentColor || '#F0C040';
+  const fontCss = getFontCss(settings?.fontFamily);
+  const darkBg = '#222222';
+
+  const profWidth: Record<string, number> = {
+    Beginner: 30,
+    Intermediate: 55,
+    Advanced: 80,
+    Fluent: 92,
+    Native: 100,
+  };
+
+  const rightTitle = (title: string) => `
+    <h2 class="uppercase font-bold tracking-[0.2em] text-[#262626] mb-2.5" style="font-size: 13px; letter-spacing: 0.2em;">
+      ${esc(title)}
+    </h2>
+  `;
+
+  const entryHeader = (title: string, date?: string) => `
+    <p class="uppercase font-bold text-[#444444] tracking-wide text-[10.5px] mb-1">
+      ${esc(title)}
+      ${date ? `<span class="font-semibold text-[#777777] ml-1.5">(${esc(date)})</span>` : ''}
+    </p>
+  `;
+
+  const rightSections: Record<SectionKey, string> = {
+    summary: '',
+    skills: '',
+    languages: '',
+
+    experience: (experience && experience.length > 0) ? `
+      <div class="mb-4">
+        ${rightTitle('Experience')}
+        <div class="space-y-3">
+          ${experience.map(exp => `
+            <div>
+              ${entryHeader(`${exp.jobTitle}${exp.company ? ` · ${exp.company}` : ''}`, dateRange(exp.startDate, exp.endDate, exp.current))}
+              ${exp.description ? `
+                <div class="space-y-0.5 mt-0.5">
+                  ${bullets(exp.description).map(b => `
+                    <p class="text-[9.5px] text-[#666666] leading-relaxed">${esc(b)}</p>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '',
+
+    education: (education && education.length > 0) ? `
+      <div class="mb-4">
+        ${rightTitle('Education')}
+        <div class="space-y-3">
+          ${education.map(edu => `
+            <div>
+              ${entryHeader(`${edu.degree}${edu.institution ? ` · ${edu.institution}` : ''}`, dateRange(edu.startDate, edu.endDate, false))}
+              ${edu.description ? `<p class="text-[9.5px] text-[#666666] leading-relaxed mt-0.5">${esc(edu.description)}</p>` : ''}
+              ${edu.gpa ? `<p class="text-[9px] text-[#888888] mt-0.5">GPA: ${esc(edu.gpa)}</p>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '',
+
+    projects: (projects && projects.length > 0) ? `
+      <div class="mb-4">
+        ${rightTitle('Projects')}
+        <div class="space-y-2.5">
+          ${projects.map(p => `
+            <div>
+              ${entryHeader(p.name, p.date ? fmtDate(p.date) : undefined)}
+              ${p.description ? `<p class="text-[9.5px] text-[#666666] leading-relaxed">${esc(p.description)}</p>` : ''}
+              ${p.technologies ? `<p class="text-[9px] text-[#888888] mt-0.5"><span class="font-semibold text-[#555555]">Tech:</span> ${esc(p.technologies)}</p>` : ''}
+              ${(p.url || p.githubUrl) ? `
+                <p class="text-[9px] mt-0.5 text-[#555555]">
+                  ${p.url ? `<span>${esc(p.url)}</span>` : ''}
+                  ${(p.url && p.githubUrl) ? ' · ' : ''}
+                  ${p.githubUrl ? `<span>${esc(p.githubUrl)}</span>` : ''}
+                </p>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '',
+
+    certifications: (certifications && certifications.length > 0) ? `
+      <div class="mb-4">
+        ${rightTitle('Certifications')}
+        <div class="space-y-1.5">
+          ${certifications.map(c => `
+            <div class="flex justify-between items-baseline flex-wrap gap-1">
+              <div>
+                <p class="text-[10px] font-bold text-[#444444] uppercase">${esc(c.name)}</p>
+                <p class="text-[9px] text-[#777777]">${esc(c.organization)}</p>
+              </div>
+              ${c.date ? `<p class="text-[9px] text-[#888888]">${esc(fmtDate(c.date))}</p>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '',
+
+    achievements: (achievements && achievements.length > 0) ? `
+      <div class="mb-4">
+        ${rightTitle('Achievements')}
+        <div class="space-y-1.5">
+          ${achievements.map(a => `
+            <div>
+              <p class="text-[10px] font-bold text-[#444444] uppercase">${esc(a.title)}</p>
+              ${a.description ? `<p class="text-[9.5px] text-[#666666]">${esc(a.description)}</p>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '',
+
+    interests: (interests && interests.length > 0) ? `
+      <div class="mb-4">
+        ${rightTitle('Interests')}
+        <p class="text-[9.5px] text-[#666666]">${esc(interests.join(' · '))}</p>
+      </div>
+    ` : '',
+  };
+
+  const rightContent = (sectionOrder || []).map(key => rightSections[key] || '').join('');
+
+  return `
+    <div class="bg-white w-full flex" style="font-family: ${fontCss}; height: 1123px; overflow: hidden;">
+      <!-- LEFT DARK SIDEBAR (36%) -->
+      <div class="w-[36%] shrink-0 flex flex-col overflow-hidden text-white" style="background-color: ${darkBg};">
+        ${(settings?.showPhoto && personal?.photo) ? `
+          <div class="w-full shrink-0" style="height: 230px;">
+            <img src="${personal.photo}" alt="${esc(personal.fullName)}" class="w-full h-full object-cover block" />
+          </div>
+        ` : `
+          <div class="w-full shrink-0 flex items-center justify-center bg-[#181818]" style="height: 160px;">
+            <span class="text-[28px] font-bold text-[#444444] tracking-wider uppercase">
+              ${esc((personal?.fullName || 'AB').slice(0, 2))}
+            </span>
+          </div>
+        `}
+
+        <div class="px-6 py-5 flex flex-col gap-5 overflow-hidden flex-1">
+          ${summary ? `
+            <div>
+              <h3 class="uppercase tracking-[0.22em] font-bold text-[#999999] mb-2 text-[11px]">
+                About Me
+              </h3>
+              <p class="text-[9.5px] text-[#cccccc] leading-relaxed">
+                ${esc(summary)}
+              </p>
+            </div>
+          ` : ''}
+
+          ${(skills && skills.length > 0) ? `
+            <div>
+              <h3 class="uppercase tracking-[0.22em] font-bold text-[#999999] mb-2.5 text-[11px]">
+                Skills
+              </h3>
+              <div class="space-y-2">
+                ${skills.map((sk, index) => {
+                  const defaultWidths = [85, 70, 90, 60, 75, 80, 65, 95];
+                  const barWidth = defaultWidths[index % defaultWidths.length];
+                  return `
+                    <div class="flex items-center justify-between gap-2">
+                      <p class="text-[9.5px] text-[#cccccc] shrink-0 truncate max-w-[48%]">
+                        ${esc(sk.name)}:
+                      </p>
+                      <div class="flex-1 max-w-[48%] h-1 bg-[#3a3a3a] rounded-full overflow-hidden">
+                        <div class="h-full bg-[#8c8c8c] rounded-full" style="width: ${barWidth}%;"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${(languages && languages.length > 0) ? `
+            <div>
+              <h3 class="uppercase tracking-[0.22em] font-bold text-[#999999] mb-2 text-[11px]">
+                Languages
+              </h3>
+              <div class="space-y-1.5">
+                ${languages.map(l => `
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="text-[9.5px] text-[#cccccc] shrink-0 truncate max-w-[48%]">
+                      ${esc(l.language)}:
+                    </p>
+                    <div class="flex-1 max-w-[48%] h-1 bg-[#3a3a3a] rounded-full overflow-hidden">
+                      <div class="h-full bg-[#8c8c8c] rounded-full" style="width: ${profWidth[l.proficiency] ?? 70}%;"></div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN (64%) -->
+      <div class="flex-1 flex flex-col overflow-hidden bg-white">
+        <div class="pt-9 pb-6 px-8 flex flex-col items-center text-center">
+          <div class="relative inline-block mb-3.5">
+            <div class="absolute left-[-12px] right-[-12px] bottom-1 h-3.5 -z-0 opacity-95" style="background-color: ${accent};"></div>
+            <h1 class="relative z-10 font-black uppercase text-[#222222] tracking-[0.08em] leading-none" style="font-size: 27px;">
+              ${esc(personal?.fullName || 'YOUR NAME')}
+            </h1>
+          </div>
+
+          <div class="space-y-0.5 text-[9.5px] text-[#777777] leading-relaxed">
+            ${personal?.location ? `<p>${esc(personal.location)}</p>` : ''}
+            ${personal?.phone ? `<p>phone: ${esc(personal.phone)}</p>` : ''}
+            ${personal?.email ? `<p>email: ${esc(personal.email)}</p>` : ''}
+            ${personal?.website ? `<p>${esc(personal.website)}</p>` : ''}
+            ${personal?.linkedin ? `<p>${esc(personal.linkedin)}</p>` : ''}
+            ${personal?.github ? `<p>${esc(personal.github)}</p>` : ''}
+          </div>
+        </div>
+
+        <div class="px-8 pt-2 pb-6 flex-1 overflow-hidden">
+          ${rightContent}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // ── Main Entry Point ──────────────────────────────────────────
 // IMPORTANT:
 // This file is pure HTML-string generation.
@@ -991,6 +1237,10 @@ export function buildResumeHtml(
   switch (templateId) {
     case 'modern':
       body = renderModern(resumeData);
+      break;
+
+    case 'executive':
+      body = renderExecutive(resumeData);
       break;
 
     case 'minimal':

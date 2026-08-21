@@ -168,9 +168,9 @@ export default function HomePage() {
           <div className="max-w-6xl mx-auto sm:px-2 lg:px-4">
             <div className="mb-8 pb-4 border-b border-[#E5E5E5]">
               <p className="text-xs font-semibold text-[#595959] uppercase tracking-widest mb-1">Templates</p>
-              <p className="text-sm text-[#404040]">Five professional designs — switch any time, your content stays intact.</p>
+              <p className="text-sm text-[#404040]">Six professional designs — switch any time, your content stays intact.</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 border border-[#E5E5E5]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 border border-[#E5E5E5]">
               {TEMPLATES.map(t => (
                 <Link key={t.id} href={`/builder?template=${t.id}`}
                   className="group flex flex-col bg-white hover:bg-[#F7F7F7] transition-colors duration-150 border-b border-r border-[#E5E5E5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black overflow-hidden">

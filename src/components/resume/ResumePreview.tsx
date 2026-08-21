@@ -7,6 +7,7 @@ import { ModernTemplate }    from './templates/ModernTemplate';
 import { MinimalTemplate }   from './templates/MinimalTemplate';
 import { DeveloperTemplate } from './templates/DeveloperTemplate';
 import { StudentTemplate }   from './templates/StudentTemplate';
+import { ExecutiveTemplate } from './templates/ExecutiveTemplate';
 import { HiMinus, HiPlus } from 'react-icons/hi2';
 
 const TEMPLATE_MAP = {
@@ -15,6 +16,7 @@ const TEMPLATE_MAP = {
   minimal:   MinimalTemplate,
   developer: DeveloperTemplate,
   student:   StudentTemplate,
+  executive: ExecutiveTemplate,
 } as const;
 
 const A4_W = 794;
