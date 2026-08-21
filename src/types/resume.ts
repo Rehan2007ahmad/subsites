@@ -85,7 +85,8 @@ export type TemplateId =
   | 'modern'
   | 'minimal'
   | 'developer'
-  | 'student';
+  | 'student'
+  | 'executive';
 
 export type FontFamily = 'Inter' | 'Georgia' | 'Roboto' | 'Lato';
 
@@ -152,6 +153,15 @@ export const TEMPLATES: TemplateInfo[] = [
     atsScore: 'Medium',
     bestFor: ['Marketing', 'Design', 'Sales', 'Consulting'],
     previewBg: '#0f4c75',
+  },
+  {
+    id: 'executive',
+    name: 'Executive',
+    description:
+      'Premium dark sidebar layout with bold header styling and skill bar metrics.',
+    atsScore: 'High',
+    bestFor: ['Executive', 'Sales', 'Creative', 'Leadership', 'Tech'],
+    previewBg: '#222222',
   },
   {
     id: 'minimal',
