@@ -9,39 +9,39 @@ export function StudentTemplate({ data }: TemplateProps) {
   const lightAccent = `${accent}18`;
 
   const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex items-center gap-2 mb-3">
-      <div className="h-4 w-1 rounded-full" style={{ backgroundColor: accent }} />
-      <h2 className="text-sm font-bold text-gray-800">{children}</h2>
+    <div className="flex items-center gap-1.5 mb-2">
+      <div className="h-3.5 w-1 rounded-full" style={{ backgroundColor: accent }} />
+      <h2 className="text-[10px] font-bold text-gray-800">{children}</h2>
     </div>
   );
 
   const sectionMap: Record<SectionKey, React.ReactNode> = {
     summary: summary ? (
-      <section key="summary" className="mb-5 rounded-xl p-4" style={{ backgroundColor: lightAccent }}>
+      <section key="summary" className="mb-3 rounded-lg p-3" style={{ backgroundColor: lightAccent }}>
         <SectionTitle>About Me</SectionTitle>
-        <p className="text-sm text-gray-700 leading-relaxed">{summary}</p>
+        <p className="text-[11px] text-gray-700 leading-relaxed">{summary}</p>
       </section>
     ) : null,
 
     education: education.length > 0 ? (
-      <section key="education" className="mb-5">
+      <section key="education" className="mb-3">
         <SectionTitle>Education</SectionTitle>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {education.map((edu) => (
-            <div key={edu.id} className="rounded-xl border border-gray-100 p-3">
+            <div key={edu.id} className="rounded-lg border border-gray-100 p-2.5">
               <div className="flex justify-between items-start flex-wrap gap-1">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{edu.degree}</p>
-                  <p className="text-xs text-gray-600">{edu.institution}{edu.location ? `, ${edu.location}` : ''}</p>
+                  <p className="text-[11px] font-semibold text-gray-900">{edu.degree}</p>
+                  <p className="text-[9px] text-gray-600">{edu.institution}{edu.location ? `, ${edu.location}` : ''}</p>
                 </div>
-                <p className="text-xs text-white rounded-full px-2 py-0.5" style={{ backgroundColor: accent }}>
+                <p className="text-[9px] text-white rounded-full px-2 py-0.5 shrink-0" style={{ backgroundColor: accent }}>
                   {dateRange(edu.startDate, edu.endDate, false)}
                 </p>
               </div>
               {edu.gpa && (
-                <p className="text-xs font-medium mt-1" style={{ color: accent }}>GPA: {edu.gpa}</p>
+                <p className="text-[9px] font-medium mt-1" style={{ color: accent }}>GPA: {edu.gpa}</p>
               )}
-              {edu.description && <p className="text-xs text-gray-600 mt-1">{edu.description}</p>}
+              {edu.description && <p className="text-[9px] text-gray-600 mt-0.5">{edu.description}</p>}
             </div>
           ))}
         </div>
@@ -49,11 +49,11 @@ export function StudentTemplate({ data }: TemplateProps) {
     ) : null,
 
     skills: skills.length > 0 ? (
-      <section key="skills" className="mb-5">
+      <section key="skills" className="mb-3">
         <SectionTitle>Skills</SectionTitle>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1">
           {skills.map((sk) => (
-            <span key={sk.id} className="rounded-full px-2.5 py-0.5 text-xs font-medium" style={{ backgroundColor: lightAccent, color: accent }}>
+            <span key={sk.id} className="rounded-full px-2 py-0.5 text-[9px] font-medium" style={{ backgroundColor: lightAccent, color: accent }}>
               {sk.name}
             </span>
           ))}
@@ -62,24 +62,24 @@ export function StudentTemplate({ data }: TemplateProps) {
     ) : null,
 
     projects: projects.length > 0 ? (
-      <section key="projects" className="mb-5">
+      <section key="projects" className="mb-3">
         <SectionTitle>Projects</SectionTitle>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {projects.map((p) => (
-            <div key={p.id} className="rounded-xl border border-gray-100 p-3">
+            <div key={p.id} className="rounded-lg border border-gray-100 p-2.5">
               <div className="flex justify-between items-start flex-wrap gap-1">
-                <p className="text-sm font-semibold text-gray-900">{p.name}</p>
-                {p.date && <p className="text-xs text-gray-400">{fmtDate(p.date)}</p>}
+                <p className="text-[11px] font-semibold text-gray-900">{p.name}</p>
+                {p.date && <p className="text-[9px] text-gray-400">{fmtDate(p.date)}</p>}
               </div>
-              {p.description && <p className="text-xs text-gray-700 mt-1">{p.description}</p>}
+              {p.description && <p className="text-[10px] text-gray-700 mt-0.5">{p.description}</p>}
               {p.technologies && (
-                <div className="mt-1.5 flex flex-wrap gap-1">
+                <div className="mt-1 flex flex-wrap gap-1">
                   {p.technologies.split(',').map((t, i) => (
-                    <span key={i} className="rounded px-1.5 py-0.5 text-xs bg-gray-100 text-gray-600">{t.trim()}</span>
+                    <span key={i} className="rounded px-1.5 py-0.5 text-[9px] bg-gray-100 text-gray-600">{t.trim()}</span>
                   ))}
                 </div>
               )}
-              {p.githubUrl && <p className="text-xs mt-1" style={{ color: accent }}>{p.githubUrl}</p>}
+              {p.githubUrl && <p className="text-[9px] mt-1" style={{ color: accent }}>{p.githubUrl}</p>}
             </div>
           ))}
         </div>
@@ -87,22 +87,22 @@ export function StudentTemplate({ data }: TemplateProps) {
     ) : null,
 
     experience: experience.length > 0 ? (
-      <section key="experience" className="mb-5">
+      <section key="experience" className="mb-3">
         <SectionTitle>Experience</SectionTitle>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {experience.map((exp) => (
             <div key={exp.id}>
               <div className="flex justify-between items-start flex-wrap gap-1">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{exp.jobTitle}</p>
-                  <p className="text-xs text-gray-500">{exp.company}{exp.location ? `, ${exp.location}` : ''}</p>
+                  <p className="text-[11px] font-semibold text-gray-900">{exp.jobTitle}</p>
+                  <p className="text-[9px] text-gray-500">{exp.company}{exp.location ? `, ${exp.location}` : ''}</p>
                 </div>
-                <p className="text-xs text-gray-400">{dateRange(exp.startDate, exp.endDate, exp.current)}</p>
+                <p className="text-[9px] text-gray-400">{dateRange(exp.startDate, exp.endDate, exp.current)}</p>
               </div>
               {exp.description && (
-                <ul className="mt-1.5 space-y-1">
+                <ul className="mt-1 space-y-0.5">
                   {bullets(exp.description).map((b, i) => (
-                    <li key={i} className="flex gap-2 text-xs text-gray-700">
+                    <li key={i} className="flex gap-1.5 text-[10px] text-gray-700">
                       <span className="mt-1.5 h-1 w-1 rounded-full shrink-0" style={{ backgroundColor: accent }} />
                       <span>{b}</span>
                     </li>
@@ -116,16 +116,16 @@ export function StudentTemplate({ data }: TemplateProps) {
     ) : null,
 
     certifications: certifications.length > 0 ? (
-      <section key="certifications" className="mb-5">
+      <section key="certifications" className="mb-3">
         <SectionTitle>Certifications</SectionTitle>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {certifications.map((c) => (
             <div key={c.id} className="flex justify-between flex-wrap gap-1">
               <div>
-                <p className="text-sm font-medium text-gray-900">{c.name}</p>
-                <p className="text-xs text-gray-500">{c.organization}</p>
+                <p className="text-[11px] font-medium text-gray-900">{c.name}</p>
+                <p className="text-[9px] text-gray-500">{c.organization}</p>
               </div>
-              {c.date && <p className="text-xs text-gray-400">{fmtDate(c.date)}</p>}
+              {c.date && <p className="text-[9px] text-gray-400">{fmtDate(c.date)}</p>}
             </div>
           ))}
         </div>
@@ -133,15 +133,15 @@ export function StudentTemplate({ data }: TemplateProps) {
     ) : null,
 
     achievements: achievements.length > 0 ? (
-      <section key="achievements" className="mb-5">
+      <section key="achievements" className="mb-3">
         <SectionTitle>Achievements</SectionTitle>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {achievements.map((a) => (
             <div key={a.id} className="flex gap-2">
-              <span className="mt-1 h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: accent }} />
+              <span className="mt-1 h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: accent }} />
               <div>
-                <p className="text-sm font-medium text-gray-900">{a.title}</p>
-                {a.description && <p className="text-xs text-gray-600">{a.description}</p>}
+                <p className="text-[11px] font-medium text-gray-900">{a.title}</p>
+                {a.description && <p className="text-[9px] text-gray-600">{a.description}</p>}
               </div>
             </div>
           ))}
@@ -150,11 +150,11 @@ export function StudentTemplate({ data }: TemplateProps) {
     ) : null,
 
     languages: languages.length > 0 ? (
-      <section key="languages" className="mb-5">
+      <section key="languages" className="mb-3">
         <SectionTitle>Languages</SectionTitle>
         <div className="flex flex-wrap gap-3">
           {languages.map((l) => (
-            <p key={l.id} className="text-sm text-gray-700">
+            <p key={l.id} className="text-[11px] text-gray-700">
               <span className="font-medium">{l.language}</span>
               <span className="text-gray-400"> · {l.proficiency}</span>
             </p>
@@ -164,11 +164,11 @@ export function StudentTemplate({ data }: TemplateProps) {
     ) : null,
 
     interests: interests.length > 0 ? (
-      <section key="interests" className="mb-5">
+      <section key="interests" className="mb-3">
         <SectionTitle>Interests</SectionTitle>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1">
           {interests.map((i, idx) => (
-            <span key={idx} className="text-xs rounded-full px-2.5 py-0.5 bg-gray-100 text-gray-600">{i}</span>
+            <span key={idx} className="text-[9px] rounded-full px-2 py-0.5 bg-gray-100 text-gray-600">{i}</span>
           ))}
         </div>
       </section>
@@ -181,15 +181,23 @@ export function StudentTemplate({ data }: TemplateProps) {
                   'Inter, Arial, sans-serif';
 
   return (
-    <div className="bg-white w-full min-h-full" style={{ fontFamily: fontCss }}>
-      {/* Header */}
-      <div className="px-8 pt-8 pb-5 text-center border-b-4" style={{ borderColor: accent }}>
+    <div
+      className="bg-white w-full"
+      style={{ fontFamily: fontCss, height: 1123, overflow: 'hidden' }}
+    >
+      {/* Centered header */}
+      <div className="px-7 pt-5 pb-4 text-center border-b-4" style={{ borderColor: accent }}>
         {settings.showPhoto && personal.photo && (
-          <img src={personal.photo} alt={personal.fullName} className="h-20 w-20 rounded-full object-cover mx-auto mb-3 border-2" style={{ borderColor: accent }} />
+          <img
+            src={personal.photo}
+            alt={personal.fullName}
+            className="h-16 w-16 rounded-full object-cover mx-auto mb-2 border-2"
+            style={{ borderColor: accent }}
+          />
         )}
-        <h1 className="text-2xl font-bold text-gray-900">{personal.fullName || 'Your Name'}</h1>
-        {personal.jobTitle && <p className="text-sm mt-0.5 font-medium" style={{ color: accent }}>{personal.jobTitle}</p>}
-        <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-0.5 text-xs text-gray-500">
+        <h1 className="text-[20px] font-bold text-gray-900 leading-tight">{personal.fullName || 'Your Name'}</h1>
+        {personal.jobTitle && <p className="text-[11px] mt-0.5 font-medium" style={{ color: accent }}>{personal.jobTitle}</p>}
+        <div className="mt-1.5 flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-[9px] text-gray-500">
           {personal.email && <span>{personal.email}</span>}
           {personal.phone && <span>{personal.phone}</span>}
           {personal.location && <span>{personal.location}</span>}
@@ -197,7 +205,7 @@ export function StudentTemplate({ data }: TemplateProps) {
           {personal.linkedin && <span style={{ color: accent }}>{personal.linkedin}</span>}
         </div>
       </div>
-      <div className="px-8 pt-5 pb-8">
+      <div className="px-7 pt-4 pb-5">
         {sectionOrder.map((key) => sectionMap[key])}
       </div>
     </div>
