@@ -1404,13 +1404,13 @@ export function buildResumeHtml(
     }
 
     .py-8 {
-      padding-top: 2rem;
-      padding-bottom: 2rem;
+      padding-top: 1.25rem;
+      padding-bottom: 1.25rem;
     }
 
     .py-10 {
-      padding-top: 2.5rem;
-      padding-bottom: 2.5rem;
+      padding-top: 1.5rem;
+      padding-bottom: 1.5rem;
     }
 
     .pt-1 {
@@ -1418,27 +1418,27 @@ export function buildResumeHtml(
     }
 
     .pt-5 {
-      padding-top: 1.25rem;
+      padding-top: 0.875rem;
     }
 
     .pt-6 {
-      padding-top: 1.5rem;
+      padding-top: 1rem;
     }
 
     .pt-8 {
-      padding-top: 2rem;
+      padding-top: 1.25rem;
     }
 
     .pb-5 {
-      padding-bottom: 1.25rem;
+      padding-bottom: 0.875rem;
     }
 
     .pb-6 {
-      padding-bottom: 1.5rem;
+      padding-bottom: 1rem;
     }
 
     .pb-8 {
-      padding-bottom: 2rem;
+      padding-bottom: 1.25rem;
     }
 
     /* =========================================================
@@ -1470,12 +1470,12 @@ export function buildResumeHtml(
     }
 
     .mb-5 {
-      margin-bottom: 1.25rem;
+      margin-bottom: 0.75rem;
     }
 
     .my-4 {
-      margin-top: 1rem;
-      margin-bottom: 1rem;
+      margin-top: 0.625rem;
+      margin-bottom: 0.625rem;
     }
 
     .mx-auto {
@@ -1488,33 +1488,33 @@ export function buildResumeHtml(
        ========================================================= */
 
     .text-xs {
-      font-size: 0.75rem;
-      line-height: 1rem;
+      font-size: 0.5625rem;
+      line-height: 0.875rem;
     }
 
     .text-sm {
-      font-size: 0.875rem;
-      line-height: 1.25rem;
+      font-size: 0.6875rem;
+      line-height: 1rem;
     }
 
     .text-base {
-      font-size: 1rem;
-      line-height: 1.5rem;
+      font-size: 0.6875rem;
+      line-height: 1rem;
     }
 
     .text-xl {
-      font-size: 1.25rem;
-      line-height: 1.75rem;
+      font-size: 1rem;
+      line-height: 1.4rem;
     }
 
     .text-2xl {
-      font-size: 1.5rem;
-      line-height: 2rem;
+      font-size: 1.25rem;
+      line-height: 1.6rem;
     }
 
     .text-3xl {
-      font-size: 1.875rem;
-      line-height: 2.25rem;
+      font-size: 1.5rem;
+      line-height: 1.75rem;
     }
 
     .font-light {
@@ -1731,6 +1731,23 @@ export function buildResumeHtml(
 
     .opacity-30 {
       opacity: 0.3;
+    }
+
+    /* =========================================================
+       PAGE SIZE — force single A4 page
+       ========================================================= */
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    html, body {
+      width: 794px;
+      height: 1123px;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
     }
 
     /* =========================================================
