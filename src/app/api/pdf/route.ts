@@ -9,36 +9,19 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-/**
- * Chromium 149 remote pack.
- *
- * IMPORTANT:
- * This must match the installed @sparticuz/chromium-min version.
- */
 const CHROMIUM_PACK_URL =
   'https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar';
 
-/**
- * Find a locally installed Chrome/Edge executable.
- *
- * @sparticuz/chromium is Linux-only, so local Windows development
- * must use the Chrome/Edge installed on the machine.
- */
 function findLocalChrome(): string | undefined {
   const candidates = [
-    // Google Chrome
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-
-    // Microsoft Edge
     'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
     'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
 
-    // macOS
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
 
-    // Linux
     '/usr/bin/google-chrome',
     '/usr/bin/google-chrome-stable',
     '/usr/bin/chromium',
@@ -61,17 +44,12 @@ function findLocalChrome(): string | undefined {
   return undefined;
 }
 
-/**
- * Launch Puppeteer.
- *
- * Local:
- *   Windows/macOS/Linux installed Chrome/Edge
- *
- * Vercel:
- *   @sparticuz/chromium-min + remote Chromium 149 pack
- */
 async function launchBrowser() {
   const isVercel = Boolean(process.env.VERCEL);
+
+  // ============================================================
+  // LOCAL DEVELOPMENT
+  // ============================================================
 
   if (!isVercel) {
     const executablePath =
@@ -79,7 +57,7 @@ async function launchBrowser() {
 
     if (!executablePath) {
       throw new Error(
-        'Chrome was not found on this computer. Install Google Chrome or set CHROME_PATH in .env.local.'
+        'Chrome was not found. Install Google Chrome or set CHROME_PATH in .env.local.'
       );
     }
 
@@ -108,22 +86,25 @@ async function launchBrowser() {
     });
   }
 
-  console.log('[PDF] Running on Vercel');
+  // ============================================================
+  // VERCEL
+  // ============================================================
+
+  console.log('[PDF] Vercel environment detected');
   console.log('[PDF] Loading Chromium 149...');
 
-  const executablePath = await chromium.executablePath(
-    CHROMIUM_PACK_URL
-  );
+  const executablePath =
+    await chromium.executablePath(CHROMIUM_PACK_URL);
 
-  console.log('[PDF] Chromium executable:', executablePath);
+  console.log(
+    '[PDF] Chromium executable:',
+    executablePath
+  );
 
   return puppeteer.launch({
     executablePath,
 
-    args: await chromium.defaultArgs({
-      args: chromium.args,
-      headless: 'shell',
-    }),
+    args: chromium.args,
 
     defaultViewport: {
       width: 794,
@@ -131,58 +112,23 @@ async function launchBrowser() {
       deviceScaleFactor: 1,
     },
 
-    headless: 'shell',
+    headless: true,
   });
 }
 
-/**
- * Wait until every image in the document has either loaded or failed.
- */
-async function waitForImages(page: Awaited<ReturnType<typeof puppeteer.launch>>) {
-  const pages = await page.pages();
-  const currentPage = pages[pages.length - 1];
-
-  if (!currentPage) {
-    return;
-  }
-
-  await currentPage.evaluate(async () => {
-    const images = Array.from(
-      document.querySelectorAll('img')
-    ) as HTMLImageElement[];
-
-    await Promise.all(
-      images.map(async (img) => {
-        if (img.complete) {
-          return;
-        }
-
-        await new Promise<void>((resolve) => {
-          img.addEventListener('load', () => resolve(), {
-            once: true,
-          });
-
-          img.addEventListener('error', () => resolve(), {
-            once: true,
-          });
-        });
-      })
-    );
-  });
-}
-
-/**
- * POST /api/pdf
- */
 export async function POST(req: NextRequest) {
-  let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
+  let browser: Awaited<
+    ReturnType<typeof puppeteer.launch>
+  > | null = null;
 
   try {
-    console.log('[PDF] Request received');
+    console.log('[PDF] =============================');
+    console.log('[PDF] PDF request received');
+    console.log('[PDF] =============================');
 
-    // ─────────────────────────────────────────────
-    // Parse request
-    // ─────────────────────────────────────────────
+    // ==========================================================
+    // READ REQUEST
+    // ==========================================================
 
     let data: ResumeData;
 
@@ -199,10 +145,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ─────────────────────────────────────────────
-    // Basic validation
-    // ─────────────────────────────────────────────
-
     if (!data?.personal || !data?.settings) {
       return NextResponse.json(
         {
@@ -215,20 +157,24 @@ export async function POST(req: NextRequest) {
     }
 
     console.log(
-      '[PDF] Generating resume for:',
+      '[PDF] Resume:',
       data.personal.fullName || 'Unnamed'
     );
 
-    // ─────────────────────────────────────────────
-    // Generate HTML
-    // ─────────────────────────────────────────────
+    // ==========================================================
+    // BUILD HTML
+    // ==========================================================
+
+    console.log('[PDF] Building HTML...');
 
     const html = buildResumeHtml(data, {
       compact: false,
     });
 
-    if (!html || html.trim().length === 0) {
-      throw new Error('Resume HTML generation returned empty HTML.');
+    if (!html || !html.trim()) {
+      throw new Error(
+        'buildResumeHtml() returned empty HTML.'
+      );
     }
 
     console.log(
@@ -237,19 +183,21 @@ export async function POST(req: NextRequest) {
       'characters'
     );
 
-    // ─────────────────────────────────────────────
-    // Launch browser
-    // ─────────────────────────────────────────────
+    // ==========================================================
+    // LAUNCH CHROME
+    // ==========================================================
+
+    console.log('[PDF] Launching browser...');
 
     browser = await launchBrowser();
 
     console.log('[PDF] Browser launched');
 
-    const page = await browser.newPage();
+    // ==========================================================
+    // CREATE PAGE
+    // ==========================================================
 
-    // ─────────────────────────────────────────────
-    // A4 viewport
-    // ─────────────────────────────────────────────
+    const page = await browser.newPage();
 
     await page.setViewport({
       width: 794,
@@ -257,13 +205,11 @@ export async function POST(req: NextRequest) {
       deviceScaleFactor: 1,
     });
 
-    // ─────────────────────────────────────────────
-    // Load resume HTML
-    //
-    // DO NOT use networkidle0 here.
-    // Google Fonts / external resources can keep
-    // networkidle0 waiting unnecessarily.
-    // ─────────────────────────────────────────────
+    console.log('[PDF] Page created');
+
+    // ==========================================================
+    // LOAD HTML
+    // ==========================================================
 
     await page.setContent(html, {
       waitUntil: 'domcontentloaded',
@@ -271,9 +217,9 @@ export async function POST(req: NextRequest) {
 
     console.log('[PDF] HTML loaded');
 
-    // ─────────────────────────────────────────────
-    // Wait for fonts
-    // ─────────────────────────────────────────────
+    // ==========================================================
+    // WAIT FOR FONTS
+    // ==========================================================
 
     await page.evaluate(async () => {
       if (document.fonts) {
@@ -281,11 +227,11 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    console.log('[PDF] Fonts loaded');
+    console.log('[PDF] Fonts ready');
 
-    // ─────────────────────────────────────────────
-    // Wait for images
-    // ─────────────────────────────────────────────
+    // ==========================================================
+    // WAIT FOR IMAGES
+    // ==========================================================
 
     await page.evaluate(async () => {
       const images = Array.from(
@@ -301,76 +247,82 @@ export async function POST(req: NextRequest) {
                 return;
               }
 
-              img.onload = () => resolve();
-              img.onerror = () => resolve();
+              img.addEventListener(
+                'load',
+                () => resolve(),
+                { once: true }
+              );
+
+              img.addEventListener(
+                'error',
+                () => resolve(),
+                { once: true }
+              );
             })
         )
       );
     });
 
-    console.log('[PDF] Images loaded');
+    console.log('[PDF] Images ready');
 
-    // Give the browser one frame to finish layout.
+    // Give Chrome a moment to finish layout.
     await new Promise<void>((resolve) => {
       setTimeout(resolve, 100);
     });
 
-    // ─────────────────────────────────────────────
-    // Check content height
-    // ─────────────────────────────────────────────
+    // ==========================================================
+    // MEASURE CONTENT
+    // ==========================================================
 
-    let contentHeight = await page.evaluate(() => {
-      return Math.max(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight
-      );
-    });
+    let contentHeight = await page.evaluate(() =>
+      Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight
+      )
+    );
 
     console.log(
-      '[PDF] Initial content height:',
+      '[PDF] Content height:',
       contentHeight
     );
 
-    // ─────────────────────────────────────────────
-    // Compact mode
-    //
-    // A4 CSS pixel height ≈ 1123px.
-    //
-    // If the resume is slightly too tall,
-    // enable the compact CSS class.
-    // ─────────────────────────────────────────────
+    // ==========================================================
+    // COMPACT MODE
+    // ==========================================================
 
     if (contentHeight > 1123 && contentHeight <= 1500) {
       console.log('[PDF] Applying compact mode');
 
       await page.evaluate(() => {
-        document.body.classList.add('resume-compact');
+        document.body.classList.add(
+          'resume-compact'
+        );
       });
 
       await new Promise<void>((resolve) => {
         setTimeout(resolve, 150);
       });
 
-      contentHeight = await page.evaluate(() => {
-        return Math.max(
-          document.body.scrollHeight,
-          document.documentElement.scrollHeight
-        );
-      });
+      contentHeight = await page.evaluate(() =>
+        Math.max(
+          document.documentElement.scrollHeight,
+          document.body.scrollHeight
+        )
+      );
 
       console.log(
-        '[PDF] Compact content height:',
+        '[PDF] Compact height:',
         contentHeight
       );
     }
 
-    // ─────────────────────────────────────────────
-    // Generate PDF
-    // ─────────────────────────────────────────────
+    // ==========================================================
+    // CREATE PDF
+    // ==========================================================
 
-    console.log('[PDF] Generating PDF...');
+    console.log('[PDF] Creating PDF...');
 
-    const pdfBuffer = await page.pdf({
+    const pdf = await page.pdf({
       format: 'A4',
 
       printBackground: true,
@@ -383,27 +335,26 @@ export async function POST(req: NextRequest) {
       },
 
       preferCSSPageSize: true,
-
-      // Puppeteer 25 supports tagged PDF options,
-      // but we intentionally keep the output minimal.
     });
 
     console.log(
-      '[PDF] PDF generated:',
-      pdfBuffer.length,
+      '[PDF] PDF created:',
+      pdf.byteLength,
       'bytes'
     );
 
-    // ─────────────────────────────────────────────
-    // Close browser
-    // ─────────────────────────────────────────────
+    // ==========================================================
+    // CLOSE BROWSER
+    // ==========================================================
 
     await browser.close();
     browser = null;
 
-    // ─────────────────────────────────────────────
-    // Safe filename
-    // ─────────────────────────────────────────────
+    console.log('[PDF] Browser closed');
+
+    // ==========================================================
+    // FILENAME
+    // ==========================================================
 
     const sanitizedName = (
       data.personal.fullName || 'my'
@@ -413,15 +364,18 @@ export async function POST(req: NextRequest) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
 
-    const filename = `${
-      sanitizedName || 'my'
-    }-resume.pdf`;
+    const filename =
+      `${sanitizedName || 'my'}-resume.pdf`;
 
-    // ─────────────────────────────────────────────
-    // Return PDF
-    // ─────────────────────────────────────────────
+    // ==========================================================
+    // RETURN PDF
+    // ==========================================================
 
-    return new NextResponse(pdfBuffer, {
+    // Convert Uint8Array -> ArrayBuffer so NextResponse
+    // accepts it cleanly with Next.js/TypeScript.
+    const pdfArrayBuffer = new Uint8Array(pdf).buffer;
+
+    return new NextResponse(pdfArrayBuffer, {
       status: 200,
 
       headers: {
@@ -430,7 +384,8 @@ export async function POST(req: NextRequest) {
         'Content-Disposition':
           `attachment; filename="${filename}"`,
 
-        'Content-Length': String(pdfBuffer.length),
+        'Content-Length':
+          String(pdf.byteLength),
 
         'Cache-Control':
           'no-store, no-cache, must-revalidate, proxy-revalidate',
@@ -441,14 +396,29 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[PDF] Generation failed:', error);
+    console.error(
+      '[PDF] ============================='
+    );
+
+    console.error(
+      '[PDF] PDF GENERATION FAILED'
+    );
+
+    console.error(
+      '[PDF]',
+      error
+    );
+
+    console.error(
+      '[PDF] ============================='
+    );
 
     if (browser) {
       try {
         await browser.close();
       } catch (closeError) {
         console.error(
-          '[PDF] Failed to close browser:',
+          '[PDF] Browser close error:',
           closeError
         );
       }
