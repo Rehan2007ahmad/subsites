@@ -1,245 +1,472 @@
 import { NextRequest, NextResponse } from 'next/server';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium-min';
+
 import type { ResumeData } from '@/types/resume';
 import { buildResumeHtml } from '@/lib/resumeHtml';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// RUNTIME: Force Node.js — this route MUST NOT run as Edge Runtime.
-// Edge Runtime has no support for native binaries, child_process, or fs.
-// ─────────────────────────────────────────────────────────────────────────────
 export const runtime = 'nodejs';
-export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Chromium binary pack URL for @sparticuz/chromium-min.
-// Downloaded at RUNTIME on first /api/pdf call — never during next build.
-// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Chromium 149 remote pack.
+ *
+ * IMPORTANT:
+ * This must match the installed @sparticuz/chromium-min version.
+ */
 const CHROMIUM_PACK_URL =
-  'https://github.com/Sparticuz/chromium/releases/download/v133.0.0/chromium-v133.0.0-pack.tar';
+  'https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Minimal type-safe interfaces for the dynamically loaded packages.
-// We use require() at runtime so the static bundler (Webpack / Turbopack / NFT)
-// never tries to trace, bundle, or walk the puppeteer-core ESM tree.
-// ─────────────────────────────────────────────────────────────────────────────
-interface ChromiumModule {
-  args: string[];
-  defaultViewport: { width: number; height: number } | null;
-  executablePath(packUrl?: string): Promise<string>;
-  headless: boolean;
-}
+/**
+ * Find a locally installed Chrome/Edge executable.
+ *
+ * @sparticuz/chromium is Linux-only, so local Windows development
+ * must use the Chrome/Edge installed on the machine.
+ */
+function findLocalChrome(): string | undefined {
+  const candidates = [
+    // Google Chrome
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
 
-interface BrowserPage {
-  setViewport(opts: { width: number; height: number; deviceScaleFactor?: number }): Promise<void>;
-  setContent(html: string, opts?: { waitUntil?: string[] }): Promise<void>;
-  evaluate<T>(fn: (...args: unknown[]) => T | Promise<T>): Promise<T>;
-  pdf(opts?: {
-    format?: string;
-    printBackground?: boolean;
-    margin?: { top?: number; right?: number; bottom?: number; left?: number };
-    preferCSSPageSize?: boolean;
-  }): Promise<Buffer>;
-  close(): Promise<void>;
-}
+    // Microsoft Edge
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
 
-interface BrowserInstance {
-  newPage(): Promise<BrowserPage>;
-  close(): Promise<void>;
-}
+    // macOS
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
 
-interface PuppeteerModule {
-  launch(opts: {
-    executablePath?: string;
-    args?: string[];
-    defaultViewport?: { width: number; height: number } | null;
-    headless?: boolean;
-  }): Promise<BrowserInstance>;
-}
+    // Linux
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+  ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// getBrowser()
-//
-// Uses require() instead of await import() so that Webpack, Turbopack, and
-// Next.js Node File Tracer (NFT) cannot statically analyze the dependency.
-//
-// puppeteer-core v24 ships a "browser" field in package.json pointing to
-// puppeteer-core-browser.js (ESM). The bundler resolves this field even for
-// server code, causing NFT to walk thousands of files in lib/esm/ and time
-// out Vercel builds at 45 minutes.
-//
-// require() is opaque to static analysis — the packages are externalized via
-// serverExternalPackages in next.config.ts and Node.js resolves them at
-// request time from node_modules.
-// ─────────────────────────────────────────────────────────────────────────────
-async function getBrowser(): Promise<BrowserInstance> {
-  const isVercel = Boolean(
-    process.env.VERCEL || process.env.AWS_EXECUTION_ENV
-  );
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require('fs') as typeof import('fs');
 
-  if (isVercel) {
-    // Vercel / serverless: use @sparticuz/chromium-min with remote binary pack
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const chromium = require('@sparticuz/chromium-min') as ChromiumModule;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const puppeteer = require('puppeteer-core') as PuppeteerModule;
-
-    let executablePath: string;
+  for (const path of candidates) {
     try {
-      executablePath = await chromium.executablePath(CHROMIUM_PACK_URL);
+      if (fs.existsSync(path)) {
+        return path;
+      }
     } catch {
-      executablePath = await chromium.executablePath();
+      // Ignore invalid paths.
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Launch Puppeteer.
+ *
+ * Local:
+ *   Windows/macOS/Linux installed Chrome/Edge
+ *
+ * Vercel:
+ *   @sparticuz/chromium-min + remote Chromium 149 pack
+ */
+async function launchBrowser() {
+  const isVercel = Boolean(process.env.VERCEL);
+
+  if (!isVercel) {
+    const executablePath =
+      process.env.CHROME_PATH || findLocalChrome();
+
+    if (!executablePath) {
+      throw new Error(
+        'Chrome was not found on this computer. Install Google Chrome or set CHROME_PATH in .env.local.'
+      );
     }
 
+    console.log('[PDF] Local Chrome:', executablePath);
+
     return puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
       executablePath,
-      headless: chromium.headless,
+
+      headless: true,
+
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-software-rasterizer',
+        '--no-first-run',
+        '--no-zygote',
+      ],
+
+      defaultViewport: {
+        width: 794,
+        height: 1123,
+        deviceScaleFactor: 1,
+      },
     });
   }
 
-  // ── Local development ────────────────────────────────────────────────────
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const puppeteer = require('puppeteer-core') as PuppeteerModule;
+  console.log('[PDF] Running on Vercel');
+  console.log('[PDF] Loading Chromium 149...');
 
-  const executablePath =
-    process.env.CHROME_PATH ||
-    (() => {
-      const { existsSync } = require('fs') as typeof import('fs');
-      const candidates = [
-        // Windows
-        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-        'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-        'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-        // macOS
-        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-        // Linux
-        '/usr/bin/google-chrome',
-        '/usr/bin/chromium-browser',
-        '/usr/bin/chromium',
-      ];
-      return candidates.find((p) => { try { return existsSync(p); } catch { return false; } });
-    })();
+  const executablePath = await chromium.executablePath(
+    CHROMIUM_PACK_URL
+  );
 
-  if (!executablePath) {
-    throw new Error(
-      'Chrome not found. Install Google Chrome or set CHROME_PATH in your .env.local.'
-    );
-  }
+  console.log('[PDF] Chromium executable:', executablePath);
 
   return puppeteer.launch({
     executablePath,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--no-first-run',
-      '--no-zygote',
-    ],
-    headless: true,
+
+    args: await chromium.defaultArgs({
+      args: chromium.args,
+      headless: 'shell',
+    }),
+
+    defaultViewport: {
+      width: 794,
+      height: 1123,
+      deviceScaleFactor: 1,
+    },
+
+    headless: 'shell',
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// POST /api/pdf
-// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Wait until every image in the document has either loaded or failed.
+ */
+async function waitForImages(page: Awaited<ReturnType<typeof puppeteer.launch>>) {
+  const pages = await page.pages();
+  const currentPage = pages[pages.length - 1];
+
+  if (!currentPage) {
+    return;
+  }
+
+  await currentPage.evaluate(async () => {
+    const images = Array.from(
+      document.querySelectorAll('img')
+    ) as HTMLImageElement[];
+
+    await Promise.all(
+      images.map(async (img) => {
+        if (img.complete) {
+          return;
+        }
+
+        await new Promise<void>((resolve) => {
+          img.addEventListener('load', () => resolve(), {
+            once: true,
+          });
+
+          img.addEventListener('error', () => resolve(), {
+            once: true,
+          });
+        });
+      })
+    );
+  });
+}
+
+/**
+ * POST /api/pdf
+ */
 export async function POST(req: NextRequest) {
-  let browser: BrowserInstance | undefined;
+  let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
 
   try {
+    console.log('[PDF] Request received');
+
+    // ─────────────────────────────────────────────
+    // Parse request
+    // ─────────────────────────────────────────────
+
     let data: ResumeData;
+
     try {
       data = (await req.json()) as ResumeData;
     } catch {
-      return NextResponse.json({ error: 'Invalid JSON request payload' }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid JSON request payload.',
+        },
+        {
+          status: 400,
+        }
+      );
     }
+
+    // ─────────────────────────────────────────────
+    // Basic validation
+    // ─────────────────────────────────────────────
 
     if (!data?.personal || !data?.settings) {
-      return NextResponse.json({ error: 'Invalid resume data structure' }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid resume data structure.',
+        },
+        {
+          status: 400,
+        }
+      );
     }
 
-    // Generate the HTML string server-side (pure TypeScript, no React DOM)
-    const html = buildResumeHtml(data, { compact: false });
+    console.log(
+      '[PDF] Generating resume for:',
+      data.personal.fullName || 'Unnamed'
+    );
 
-    // Launch Chromium — only happens at request time, never during next build
-    browser = await getBrowser();
+    // ─────────────────────────────────────────────
+    // Generate HTML
+    // ─────────────────────────────────────────────
+
+    const html = buildResumeHtml(data, {
+      compact: false,
+    });
+
+    if (!html || html.trim().length === 0) {
+      throw new Error('Resume HTML generation returned empty HTML.');
+    }
+
+    console.log(
+      '[PDF] HTML generated:',
+      html.length,
+      'characters'
+    );
+
+    // ─────────────────────────────────────────────
+    // Launch browser
+    // ─────────────────────────────────────────────
+
+    browser = await launchBrowser();
+
+    console.log('[PDF] Browser launched');
+
     const page = await browser.newPage();
 
-    // A4 at 96 DPI: 794 × 1123 px
-    await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 });
+    // ─────────────────────────────────────────────
+    // A4 viewport
+    // ─────────────────────────────────────────────
 
-    // Load HTML and wait for fonts + network to settle
-    await page.setContent(html, { waitUntil: ['networkidle0', 'domcontentloaded'] });
+    await page.setViewport({
+      width: 794,
+      height: 1123,
+      deviceScaleFactor: 1,
+    });
 
-    // Wait for Google Fonts to finish loading
-    await page.evaluate(() => document.fonts?.ready);
+    // ─────────────────────────────────────────────
+    // Load resume HTML
+    //
+    // DO NOT use networkidle0 here.
+    // Google Fonts / external resources can keep
+    // networkidle0 waiting unnecessarily.
+    // ─────────────────────────────────────────────
 
-    // Wait for all images (e.g. base64 profile photo) to load
+    await page.setContent(html, {
+      waitUntil: 'domcontentloaded',
+    });
+
+    console.log('[PDF] HTML loaded');
+
+    // ─────────────────────────────────────────────
+    // Wait for fonts
+    // ─────────────────────────────────────────────
+
     await page.evaluate(async () => {
-      const imgs = Array.from(document.querySelectorAll('img'));
+      if (document.fonts) {
+        await document.fonts.ready;
+      }
+    });
+
+    console.log('[PDF] Fonts loaded');
+
+    // ─────────────────────────────────────────────
+    // Wait for images
+    // ─────────────────────────────────────────────
+
+    await page.evaluate(async () => {
+      const images = Array.from(
+        document.querySelectorAll('img')
+      ) as HTMLImageElement[];
+
       await Promise.all(
-        imgs.map((img) => {
-          if ((img as HTMLImageElement).complete) return Promise.resolve();
-          return new Promise<void>((resolve) => {
-            img.onload = () => resolve();
-            img.onerror = () => resolve();
-          });
-        })
+        images.map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete) {
+                resolve();
+                return;
+              }
+
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            })
+        )
       );
     });
 
-    // Smart 1-page auto-fit:
-    // If content overflows by less than ~30%, apply compact spacing to fit 1 page.
-    const scrollHeight = await page.evaluate(() =>
-      Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
-    );
+    console.log('[PDF] Images loaded');
 
-    if (scrollHeight > 1123 && scrollHeight <= 1450) {
-      await page.evaluate(() => document.body.classList.add('resume-compact'));
-      // Allow compact CSS to re-layout
-      await new Promise<void>((r) => setTimeout(r, 120));
-    }
-
-    // Generate exact A4 PDF — margins controlled by the resume CSS (@page)
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
-      preferCSSPageSize: true,
+    // Give the browser one frame to finish layout.
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 100);
     });
 
-    await browser.close();
-    browser = undefined;
+    // ─────────────────────────────────────────────
+    // Check content height
+    // ─────────────────────────────────────────────
 
-    // Safe filename: "john-doe-resume.pdf"
-    const sanitizedName = data.personal.fullName
-      ? data.personal.fullName
-          .toLowerCase()
-          .trim()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-|-$/g, '')
-      : 'my';
-    const filename = `${sanitizedName}-resume.pdf`;
+    let contentHeight = await page.evaluate(() => {
+      return Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight
+      );
+    });
+
+    console.log(
+      '[PDF] Initial content height:',
+      contentHeight
+    );
+
+    // ─────────────────────────────────────────────
+    // Compact mode
+    //
+    // A4 CSS pixel height ≈ 1123px.
+    //
+    // If the resume is slightly too tall,
+    // enable the compact CSS class.
+    // ─────────────────────────────────────────────
+
+    if (contentHeight > 1123 && contentHeight <= 1500) {
+      console.log('[PDF] Applying compact mode');
+
+      await page.evaluate(() => {
+        document.body.classList.add('resume-compact');
+      });
+
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 150);
+      });
+
+      contentHeight = await page.evaluate(() => {
+        return Math.max(
+          document.body.scrollHeight,
+          document.documentElement.scrollHeight
+        );
+      });
+
+      console.log(
+        '[PDF] Compact content height:',
+        contentHeight
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // Generate PDF
+    // ─────────────────────────────────────────────
+
+    console.log('[PDF] Generating PDF...');
+
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+
+      printBackground: true,
+
+      margin: {
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+      },
+
+      preferCSSPageSize: true,
+
+      // Puppeteer 25 supports tagged PDF options,
+      // but we intentionally keep the output minimal.
+    });
+
+    console.log(
+      '[PDF] PDF generated:',
+      pdfBuffer.length,
+      'bytes'
+    );
+
+    // ─────────────────────────────────────────────
+    // Close browser
+    // ─────────────────────────────────────────────
+
+    await browser.close();
+    browser = null;
+
+    // ─────────────────────────────────────────────
+    // Safe filename
+    // ─────────────────────────────────────────────
+
+    const sanitizedName = (
+      data.personal.fullName || 'my'
+    )
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    const filename = `${
+      sanitizedName || 'my'
+    }-resume.pdf`;
+
+    // ─────────────────────────────────────────────
+    // Return PDF
+    // ─────────────────────────────────────────────
 
     return new NextResponse(pdfBuffer, {
       status: 200,
+
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${filename}"`,
+
+        'Content-Disposition':
+          `attachment; filename="${filename}"`,
+
         'Content-Length': String(pdfBuffer.length),
-        'Cache-Control': 'no-store, max-age=0',
+
+        'Cache-Control':
+          'no-store, no-cache, must-revalidate, proxy-revalidate',
+
+        Pragma: 'no-cache',
+
+        Expires: '0',
       },
     });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('[PDF API Error]:', err);
+  } catch (error) {
+    console.error('[PDF] Generation failed:', error);
+
     if (browser) {
       try {
         await browser.close();
-      } catch {}
+      } catch (closeError) {
+        console.error(
+          '[PDF] Failed to close browser:',
+          closeError
+        );
+      }
     }
-    return NextResponse.json({ error: `PDF generation failed: ${message}` }, { status: 500 });
+
+    const message =
+      error instanceof Error
+        ? error.message
+        : String(error);
+
+    return NextResponse.json(
+      {
+        error: 'PDF generation failed.',
+        details: message,
+      },
+      {
+        status: 500,
+      }
+    );
   }
 }
