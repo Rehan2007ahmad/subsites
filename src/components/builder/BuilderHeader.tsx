@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { useToast } from '@/components/ui/Toast';
 import { generateResumePdf } from '@/lib/generatePdf';
+import { useRewardedAd } from '@/hooks/useRewardedAd';
 import { HiArrowDownTray, HiArrowPath, HiSwatch, HiEllipsisVertical, HiArrowUpTray, HiArrowDownOnSquare, HiTrash, HiPencilSquare, HiEye } from 'react-icons/hi2';
 import { TemplateSelector } from './TemplateSelector';
 
@@ -28,6 +29,14 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [pdfLoading,   setPdfLoading]   = useState(false);
 
+  const {
+    showRewardedAd,
+    isAdActive,
+    isAdPreparing,
+    getButtonLabel,
+    RewardedAdModal,
+  } = useRewardedAd((msg) => toast(msg, 'error'));
+
   const statusText = {
     idle:   '',
     saving: 'Saving…',
@@ -36,6 +45,16 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
   }[saveStatus];
 
   async function handleDownloadPdf() {
+    if (pdfLoading || isAdActive) return;
+
+    // 1. Gated rewarded ad (disabled / test simulation / production GPT)
+    const rewardGranted = await showRewardedAd();
+    if (!rewardGranted) {
+      // User cancelled or ad was not granted
+      return;
+    }
+
+    // 2. Only download PDF once reward is verified
     setPdfLoading(true);
     try {
       await generateResumePdf(resume);
@@ -123,14 +142,22 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
           </button>
 
           {/* Download PDF */}
-          <button onClick={handleDownloadPdf} disabled={pdfLoading}
-            className="inline-flex items-center gap-1.5 h-8 px-4 bg-black text-white text-xs font-semibold hover:bg-neutral-800 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1">
-            {pdfLoading
-              ? <HiArrowPath size={13} className="animate-spin" />
-              : <HiArrowDownTray size={13} />
-            }
-            <span className="hidden sm:inline">{pdfLoading ? 'Generating PDF…' : 'Download PDF'}</span>
-            <span className="sm:hidden">{pdfLoading ? 'PDF…' : 'PDF'}</span>
+          <button
+            onClick={handleDownloadPdf}
+            disabled={pdfLoading || isAdActive}
+            className="inline-flex items-center gap-1.5 h-8 px-4 bg-black text-white text-xs font-semibold hover:bg-neutral-800 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1"
+          >
+            {pdfLoading || isAdPreparing ? (
+              <HiArrowPath size={13} className="animate-spin" />
+            ) : (
+              <HiArrowDownTray size={13} />
+            )}
+            <span className="hidden sm:inline">
+              {getButtonLabel('Download PDF', pdfLoading)}
+            </span>
+            <span className="sm:hidden">
+              {pdfLoading ? 'PDF…' : isAdActive ? 'Ad…' : 'PDF'}
+            </span>
           </button>
 
           {/* More ⋮ */}
@@ -189,6 +216,9 @@ export function BuilderHeader({ mobileTab, setMobileTab }: Props) {
           </>
         }
       />
+
+      {/* Rewarded Ad Test Simulation Modal */}
+      <RewardedAdModal />
     </>
   );
 }

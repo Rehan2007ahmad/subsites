@@ -27,11 +27,20 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        {/* Desktop CTA */}
-        <div className="hidden md:flex items-center gap-3">
-          <Link href="https://tooleka.com" className="text-sm font-medium text-[#404040] hover:text-black transition-colors px-1">
-            tooleka.com
+        {/* Desktop Navigation Links */}
+        <div className="hidden md:flex items-center gap-6">
+          <Link href="/blog" className="text-sm font-medium text-[#404040] hover:text-black transition-colors">
+            Blog &amp; Guides
           </Link>
+          <Link href="/about" className="text-sm font-medium text-[#404040] hover:text-black transition-colors">
+            About Us
+          </Link>
+          <Link href="/contact" className="text-sm font-medium text-[#404040] hover:text-black transition-colors">
+            Contact
+          </Link>
+          <a href="https://tooleka.com" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-[#737373] hover:text-black transition-colors">
+            tooleka.com ↗
+          </a>
           <Link href="/builder" className="inline-flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-semibold hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1">
             Create Resume
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -54,13 +63,25 @@ export function SiteHeader() {
         <div className="md:hidden bg-white border-t border-[#E5E5E5]">
           <div className="px-4 pt-3 pb-5 flex flex-col gap-0.5">
             <Link href="/" onClick={() => setMenuOpen(false)}
-              className="flex items-center px-3 py-3 text-sm font-medium text-[#404040] hover:text-black transition-colors">
+              className="flex items-center px-3 py-2.5 text-sm font-medium text-[#404040] hover:text-black transition-colors">
               Home
             </Link>
-            <Link href="https://tooleka.com" onClick={() => setMenuOpen(false)}
-              className="flex items-center px-3 py-3 text-sm font-medium text-[#404040] hover:text-black transition-colors">
-              ToolEka.com ↗
+            <Link href="/blog" onClick={() => setMenuOpen(false)}
+              className="flex items-center px-3 py-2.5 text-sm font-medium text-[#404040] hover:text-black transition-colors">
+              Blog &amp; Guides
             </Link>
+            <Link href="/about" onClick={() => setMenuOpen(false)}
+              className="flex items-center px-3 py-2.5 text-sm font-medium text-[#404040] hover:text-black transition-colors">
+              About Us
+            </Link>
+            <Link href="/contact" onClick={() => setMenuOpen(false)}
+              className="flex items-center px-3 py-2.5 text-sm font-medium text-[#404040] hover:text-black transition-colors">
+              Contact
+            </Link>
+            <a href="https://tooleka.com" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}
+              className="flex items-center px-3 py-2.5 text-sm font-medium text-[#737373] hover:text-black transition-colors">
+              ToolEka.com ↗
+            </a>
             <div className="mt-3 pt-3 border-t border-[#E5E5E5]">
               <Link href="/builder" onClick={() => setMenuOpen(false)}
                 className="block w-full px-3 py-2.5 text-sm font-semibold text-white bg-black hover:bg-neutral-800 transition-colors text-center">
