@@ -6,24 +6,79 @@ import { SiteFooter } from '@/components/layout/SiteFooter';
 import { HiShieldCheck, HiLockClosed, HiEnvelope, HiInformationCircle } from 'react-icons/hi2';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | ToolEka Free Resume Builder',
+  title: 'Privacy Policy & Data Rights | ToolEka Resume Builder',
   description:
-    'Learn how ToolEka Resume Builder protects your privacy. We use client-side local storage—your resume data never leaves your device or gets saved to our servers.',
+    'Learn how ToolEka Resume Builder protects your privacy. 100% client-side local storage with zero server databases, GDPR, and CCPA compliance.',
   alternates: { canonical: 'https://resume.tooleka.com/privacy-policy' },
   openGraph: {
-    title: 'Privacy Policy | ToolEka Free Resume Builder',
+    title: 'Privacy Policy & Data Rights | ToolEka Resume Builder',
     description:
-      'Learn how ToolEka Resume Builder protects your privacy. We use client-side local storage—your resume data never leaves your device.',
+      'Learn how ToolEka Resume Builder protects your privacy. 100% client-side local storage with zero server databases, GDPR, and CCPA compliance.',
     url: 'https://resume.tooleka.com/privacy-policy',
     type: 'website',
+    images: [
+      {
+        url: 'https://resume.tooleka.com/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'ToolEka Resume Builder Privacy Policy',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Privacy Policy & Data Rights | ToolEka Resume Builder',
+    description:
+      'Learn how ToolEka Resume Builder protects your privacy. 100% client-side local storage with zero server databases, GDPR, and CCPA compliance.',
+    images: ['https://resume.tooleka.com/og-image.png'],
   },
 };
 
 export default function PrivacyPolicyPage() {
-  const lastUpdated = 'February 22, 2026';
+  const lastUpdated = 'August 22, 2026';
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Privacy Policy - ToolEka Resume Builder',
+    url: 'https://resume.tooleka.com/privacy-policy',
+    description: 'Privacy Policy explaining client-side storage architecture, GDPR/CCPA compliance, and advertising disclosures.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'ToolEka',
+      url: 'https://tooleka.com',
+    },
+  };
+
+  const breadcrumbsJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://resume.tooleka.com',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Privacy Policy',
+        item: 'https://resume.tooleka.com/privacy-policy',
+      },
+    ],
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsJsonLd) }}
+      />
       <SiteHeader />
       <main className="min-h-screen bg-[#FBFBFB] py-12 md:py-16 text-[#262626]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -54,7 +109,7 @@ export default function PrivacyPolicyPage() {
               <p className="mb-3">
                 Unlike traditional resume building platforms that require email registration, account passwords, and store your career data on remote cloud servers, <strong>ToolEka Resume Builder</strong> operates on a decentralized, client-side paradigm:
               </p>
-              <ul className="list-disc list-inside space-y-1.5 pl-2">
+              <ul className="list-disc list-inside space-y-1.5 pl-2 text-xs text-[#595959]">
                 <li><strong>No User Accounts:</strong> You do not need to provide your name, email address, password, or credit card details to use this application.</li>
                 <li><strong>No Resume Database:</strong> Your resume details (names, phone numbers, addresses, work experience, education, references) remain strictly in your browser’s local storage (<code className="bg-[#F2F2F2] px-1 py-0.5 text-xs font-mono text-black">localStorage</code>).</li>
                 <li><strong>Ephemeral PDF Generation:</strong> When you generate a PDF, your formatted resume data is sent securely to our stateless serverless rendering endpoint solely to render the PDF file stream directly back to your download manager, after which all memory buffers are immediately purged. No copy of your resume is ever archived or retained.</li>
@@ -69,7 +124,7 @@ export default function PrivacyPolicyPage() {
               <p className="mb-3">
                 When you visit <strong>resume.tooleka.com</strong>, certain standard internet technical data may be automatically collected by hosting providers and third-party advertising partners:
               </p>
-              <ul className="list-disc list-inside space-y-1.5 pl-2">
+              <ul className="list-disc list-inside space-y-1.5 pl-2 text-xs text-[#595959]">
                 <li><strong>Log Files &amp; Device Information:</strong> Standard server logs include internet protocol (IP) addresses, browser type, internet service provider (ISP), referring/exit pages, operating system, date/time stamps, and clickstream data to diagnose system performance and security.</li>
                 <li><strong>Browser Local Storage:</strong> We use browser localStorage to ensure your resume content auto-saves while you work, allowing you to close the browser and resume editing at any time. You can clear this data at any moment by clicking &ldquo;Reset Resume&rdquo; in the application menu or clearing your browser cookies/storage.</li>
               </ul>
@@ -83,7 +138,7 @@ export default function PrivacyPolicyPage() {
               <p className="mb-3">
                 ToolEka is completely free to use and funded by unobtrusive online advertising. We partner with third-party vendors, including <strong>Google AdSense</strong> and <strong>Google Ad Manager (Google Publisher Tag)</strong>.
               </p>
-              <ul className="list-disc list-inside space-y-2 pl-2">
+              <ul className="list-disc list-inside space-y-2 pl-2 text-xs text-[#595959]">
                 <li>
                   <strong>DoubleClick DART Cookies:</strong> Google, as a third-party vendor, uses cookies to serve ads on our site. Google&apos;s use of the DART cookie enables it to serve ads to our users based on their visit to our site and other sites on the Internet.
                 </li>
@@ -121,7 +176,7 @@ export default function PrivacyPolicyPage() {
               <p className="mb-3">
                 We fully respect your global privacy rights under the <strong>General Data Protection Regulation (GDPR)</strong> and the <strong>California Consumer Privacy Act (CCPA)</strong>:
               </p>
-              <ul className="list-disc list-inside space-y-1.5 pl-2">
+              <ul className="list-disc list-inside space-y-1.5 pl-2 text-xs text-[#595959]">
                 <li><strong>Right to Access &amp; Portability:</strong> You can export your full resume dataset anytime as a standardized JSON backup file using our &ldquo;Export JSON&rdquo; tool.</li>
                 <li><strong>Right to Erasure (Right to be Forgotten):</strong> You can permanently wipe all locally saved resume information at any second by clicking &ldquo;Reset Resume&rdquo;.</li>
                 <li><strong>Do Not Sell My Personal Information:</strong> We do not sell, rent, or trade your personal data to any data brokers or commercial third parties.</li>

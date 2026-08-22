@@ -3,27 +3,82 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
-import { HiDocumentText, HiCheckCircle, HiExclamationTriangle } from 'react-icons/hi2';
+import { HiDocumentText, HiCheckCircle, HiExclamationTriangle, HiShieldCheck } from 'react-icons/hi2';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service & Disclaimer | ToolEka Resume Builder',
+  title: 'Terms of Service & License | ToolEka Resume Builder',
   description:
-    'Review the Terms of Service, Acceptable Use, and Employment Disclaimers for using ToolEka Free Resume Builder.',
+    'Review the official Terms of Service, software license terms, user content ownership policies, and conditions for ToolEka Free Resume Builder.',
   alternates: { canonical: 'https://resume.tooleka.com/terms-of-service' },
   openGraph: {
-    title: 'Terms of Service & Disclaimer | ToolEka Resume Builder',
+    title: 'Terms of Service & License | ToolEka Resume Builder',
     description:
-      'Review the Terms of Service, Acceptable Use, and Employment Disclaimers for using ToolEka Free Resume Builder.',
+      'Review the official Terms of Service, software license terms, user content ownership policies, and conditions for ToolEka Free Resume Builder.',
     url: 'https://resume.tooleka.com/terms-of-service',
     type: 'website',
+    images: [
+      {
+        url: 'https://resume.tooleka.com/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'ToolEka Resume Builder Terms of Service',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Terms of Service & License | ToolEka Resume Builder',
+    description:
+      'Review the official Terms of Service, software license terms, user content ownership policies, and conditions for ToolEka Free Resume Builder.',
+    images: ['https://resume.tooleka.com/og-image.png'],
   },
 };
 
 export default function TermsPage() {
-  const lastUpdated = 'February 22, 2026';
+  const lastUpdated = 'August 22, 2026';
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Terms of Service - ToolEka Resume Builder',
+    url: 'https://resume.tooleka.com/terms-of-service',
+    description: 'Official terms of service, user rights, and software license conditions.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'ToolEka',
+      url: 'https://tooleka.com',
+    },
+  };
+
+  const breadcrumbsJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://resume.tooleka.com',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Terms of Service',
+        item: 'https://resume.tooleka.com/terms-of-service',
+      },
+    ],
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsJsonLd) }}
+      />
       <SiteHeader />
       <main className="min-h-screen bg-[#FBFBFB] py-12 md:py-16 text-[#262626]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -34,7 +89,7 @@ export default function TermsPage() {
               <span>Legal Terms</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-black tracking-tight mb-3">
-              Terms of Service &amp; Disclaimer
+              Terms of Service
             </h1>
             <p className="text-xs text-[#737373]">
               Last updated: <strong>{lastUpdated}</strong> &bull; Effective date: <strong>January 1, 2026</strong>
@@ -49,7 +104,7 @@ export default function TermsPage() {
                 1. Acceptance of Terms
               </h2>
               <p>
-                By accessing and using <strong>ToolEka Resume Builder</strong> (&ldquo;resume.tooleka.com&rdquo;, &ldquo;we&rdquo;, &ldquo;our&rdquo;, or &ldquo;us&rdquo;), you acknowledge that you have read, understood, and agree to be bound by these Terms of Service, our Privacy Policy, and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
+                By accessing and using <strong>ToolEka Resume Builder</strong> (&ldquo;resume.tooleka.com&rdquo;, &ldquo;we&rdquo;, &ldquo;our&rdquo;, or &ldquo;us&rdquo;), you acknowledge that you have read, understood, and agree to be bound by these Terms of Service, our <Link href="/privacy-policy" className="underline text-black font-semibold">Privacy Policy</Link>, our <Link href="/disclaimer" className="underline text-black font-semibold">Disclaimer</Link>, and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
               </p>
             </section>
 
@@ -58,7 +113,7 @@ export default function TermsPage() {
               <h2 className="text-lg font-bold text-black border-b border-[#E5E5E5] pb-2 mb-3">
                 2. Use License &amp; User Ownership of Content
               </h2>
-              <ul className="list-disc list-inside space-y-2 pl-2">
+              <ul className="list-disc list-inside space-y-2 pl-2 text-xs text-[#595959]">
                 <li>
                   <strong>Your Content Remains Yours:</strong> You retain 100% full legal ownership, copyright, and title to all resume content, biographies, work history, and documents generated through this platform. ToolEka claims zero ownership over your personal documents.
                 </li>
@@ -81,7 +136,7 @@ export default function TermsPage() {
                   <HiExclamationTriangle size={16} /> Important Notice Regarding Employment Results
                 </div>
                 <p>
-                  ToolEka provides resume formatting templates and editing software designed to follow industry Applicant Tracking System (ATS) best practices. However, <strong>we do not guarantee job interviews, employment offers, or hiring outcomes</strong>.
+                  ToolEka provides resume formatting templates and editing software designed to follow industry Applicant Tracking System (ATS) best practices. However, <strong>we do not guarantee job interviews, employment offers, or hiring outcomes</strong>. For comprehensive disclosures, view our dedicated <Link href="/disclaimer" className="underline font-bold">Disclaimer page</Link>.
                 </p>
               </div>
               <p>

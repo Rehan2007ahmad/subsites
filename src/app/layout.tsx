@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -7,27 +7,45 @@ const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-int
 
 const baseUrl = 'https://resume.tooleka.com';
 
+export const viewport: Viewport = {
+  themeColor: '#000000',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: 'Free Resume Builder — Create a Professional Resume | ToolEka',
-    template: '%s | ToolEka Resume Builder',
+    default: 'Free Resume Builder — ATS Resume Maker | ToolEka',
+    template: '%s | ToolEka',
   },
   description:
-    'Build and download high-scoring ATS-friendly resumes for free. Zero sign-up, no hidden fees, instant PDF export with executive, modern, and developer templates.',
+    'Build and download professional ATS-friendly resumes for free. Zero sign-up, no fees, instant single-page vector PDF export with clean templates.',
+  applicationName: 'ToolEka Resume Builder',
+  category: 'Career & Employment',
+  classification: 'Free Online Career & Resume Tools',
   keywords: [
     'free resume builder',
     'resume maker',
     'cv builder free',
     'ats resume template',
+    'ats-friendly resume',
     'download resume pdf',
     'free cv maker online',
     'resume generator',
     'executive resume template',
     'software engineer resume',
     'student resume maker',
+    'curriculum vitae generator',
+    'career change resume',
+    'star method resume',
+    'google xyz formula resume',
   ],
-  authors: [{ name: 'ToolEka', url: 'https://tooleka.com' }],
+  authors: [
+    { name: 'Rehan Ahmad', url: 'https://tooleka.com' },
+    { name: 'ToolEka Career Insights', url: 'https://resume.tooleka.com' },
+  ],
   creator: 'Rehan Ahmad',
   publisher: 'ToolEka',
   robots: {
@@ -49,49 +67,95 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: baseUrl,
     siteName: 'ToolEka Resume Builder',
-    title: 'Free Resume Builder — Create ATS-Friendly Resumes in Minutes',
+    title: 'Free Resume Builder — ATS Resume Maker | ToolEka',
     description:
-      'Create and export a professional resume in minutes for free. No account required. Download ready-to-print ATS-friendly PDFs.',
+      'Build and download professional ATS-friendly resumes for free. Zero sign-up, no fees, instant single-page vector PDF export with clean templates.',
+    images: [
+      {
+        url: `${baseUrl}/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: 'ToolEka Free Resume Builder - ATS Resume Maker',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Free Resume Builder | ToolEka',
+    title: 'Free Resume Builder — ATS Resume Maker | ToolEka',
     description:
-      'Create and export a professional resume in minutes for free. No watermark, no signup needed.',
+      'Build and download professional ATS-friendly resumes for free. Zero sign-up, no fees, instant vector PDF export.',
+    images: [`${baseUrl}/og-image.png`],
+    creator: '@tooleka',
   },
 };
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebApplication',
-  name: 'ToolEka Free Resume Builder',
-  url: baseUrl,
-  description:
-    'Free online resume builder to create ATS-compliant, professional resumes with instant PDF export.',
-  applicationCategory: 'BusinessApplication',
-  operatingSystem: 'All',
-  offers: {
-    '@type': 'Offer',
-    price: '0',
-    priceCurrency: 'USD',
+const schemas = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'ToolEka Resume Builder',
+    url: baseUrl,
+    description: 'Free online ATS resume maker and career guides with instant PDF export.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'ToolEka',
+      url: 'https://tooleka.com',
+      logo: `${baseUrl}/favicon.ico`,
+    },
   },
-  featureList: [
-    'ATS-friendly templates',
-    'Live real-time preview',
-    'Single-page A4 PDF export',
-    'No registration required',
-    'Privacy-first local storage',
-  ],
-};
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'ToolEka',
+    url: 'https://tooleka.com',
+    logo: `${baseUrl}/favicon.ico`,
+    founder: {
+      '@type': 'Person',
+      name: 'Rehan Ahmad',
+    },
+    sameAs: [
+      'https://tooleka.com',
+      'https://github.com/',
+      'https://www.instagram.com/rehan_ahx',
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'ToolEka Free Resume Builder',
+    url: baseUrl,
+    description:
+      'Free online resume builder to create ATS-compliant, professional resumes with instant PDF export.',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'All',
+    browserRequirements: 'Requires JavaScript. Requires HTML5.',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    featureList: [
+      'ATS-friendly resume templates',
+      'Live real-time preview',
+      'Single-page A4 PDF export',
+      'No registration or payment required',
+      'Privacy-first local storage',
+      'JSON resume import and export',
+    ],
+  },
+];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`h-full antialiased ${inter.variable}`}>
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        {schemas.map((s, idx) => (
+          <script
+            key={idx}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(s) }}
+          />
+        ))}
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
           <script
             async

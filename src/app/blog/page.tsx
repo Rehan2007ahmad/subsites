@@ -4,19 +4,34 @@ import Link from 'next/link';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { BLOG_POSTS } from '@/lib/blogData';
-import { HiBookOpen, HiClock, HiUser, HiArrowRight, HiSparkles } from 'react-icons/hi2';
+import { HiBookOpen, HiClock, HiUser, HiArrowRight, HiSparkles, HiDocumentText } from 'react-icons/hi2';
 
 export const metadata: Metadata = {
-  title: 'Resume & Career Advice Blog — ATS Guides & Tips | ToolEka',
+  title: 'Resume & Career Advice Blog — ATS Guides | ToolEka',
   description:
-    'Explore comprehensive career guides, ATS optimization tips, resume vs CV differences, high-impact action verbs, and proven bullet point formulas from ToolEka.',
+    'Explore expert career guides, ATS optimization tips, resume vs CV differences, 250+ action verbs, and proven Google XYZ bullet point formulas.',
   alternates: { canonical: 'https://resume.tooleka.com/blog' },
   openGraph: {
-    title: 'Resume & Career Advice Blog — ATS Guides & Tips | ToolEka',
+    title: 'Resume & Career Advice Blog — ATS Guides | ToolEka',
     description:
-      'Explore comprehensive career guides, ATS optimization tips, resume vs CV differences, high-impact action verbs, and proven bullet point formulas.',
+      'Explore expert career guides, ATS optimization tips, resume vs CV differences, 250+ action verbs, and proven Google XYZ bullet point formulas.',
     url: 'https://resume.tooleka.com/blog',
     type: 'website',
+    images: [
+      {
+        url: 'https://resume.tooleka.com/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'ToolEka Career & Resume Blog Hub',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Resume & Career Advice Blog — ATS Guides | ToolEka',
+    description:
+      'Explore expert career guides, ATS optimization tips, resume vs CV differences, 250+ action verbs, and proven Google XYZ bullet point formulas.',
+    images: ['https://resume.tooleka.com/og-image.png'],
   },
 };
 
@@ -31,18 +46,38 @@ export default function BlogIndexPage() {
       '@type': 'Organization',
       name: 'ToolEka',
       url: 'https://tooleka.com',
+      logo: 'https://resume.tooleka.com/og-image.png',
     },
     blogPost: BLOG_POSTS.map((post) => ({
       '@type': 'BlogPosting',
       headline: post.title,
       description: post.description,
       url: `https://resume.tooleka.com/blog/${post.slug}`,
-      datePublished: '2026-02-20',
+      datePublished: '2026-08-22',
       author: {
         '@type': 'Person',
         name: post.author,
       },
     })),
+  };
+
+  const breadcrumbsJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://resume.tooleka.com',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Blog & Career Guides',
+        item: 'https://resume.tooleka.com/blog',
+      },
+    ],
   };
 
   return (
@@ -51,9 +86,20 @@ export default function BlogIndexPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsJsonLd) }}
+      />
       <SiteHeader />
       <main className="min-h-screen bg-[#FBFBFB] py-12 md:py-16 text-[#262626]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Breadcrumb Navigation */}
+          <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-2 text-xs text-[#595959]">
+            <Link href="/" className="hover:text-black hover:underline">Home</Link>
+            <span>/</span>
+            <span className="text-black font-semibold">Blog &amp; Career Guides</span>
+          </nav>
+
           {/* Header Card */}
           <div className="bg-white border border-[#E5E5E5] p-6 sm:p-10 mb-10 shadow-xs">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white text-xs font-semibold uppercase tracking-widest mb-4">
@@ -64,7 +110,7 @@ export default function BlogIndexPage() {
               The Complete Resume &amp; Job Search Guide Hub
             </h1>
             <p className="text-sm sm:text-base text-[#595959] leading-relaxed max-w-3xl">
-              In-depth, data-backed tutorials on beating Applicant Tracking Systems (ATS), crafting metric-driven bullet points, mastering industry pivots, and landing top job interviews in 2026.
+              In-depth, research-backed tutorials on beating Applicant Tracking Systems (ATS), crafting metric-driven bullet points with Google XYZ formulas, mastering career pivots, and landing interviews in 2026.
             </p>
           </div>
 
@@ -113,7 +159,7 @@ export default function BlogIndexPage() {
                     href={`/blog/${post.slug}`}
                     className="inline-flex items-center gap-1 text-xs font-bold text-black group-hover:underline"
                   >
-                    Read Guide <HiArrowRight size={13} />
+                    Read Full Guide <HiArrowRight size={13} />
                   </Link>
                 </div>
               </article>
@@ -124,7 +170,7 @@ export default function BlogIndexPage() {
           <div className="bg-black text-white p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6">
             <div>
               <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-400 mb-2 uppercase tracking-wider">
-                <HiSparkles size={14} /> Ready to put these tips to work?
+                <HiSparkles size={14} /> Ready to put these guides to work?
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                 Build Your ATS-Friendly Resume in 5 Minutes
@@ -137,7 +183,7 @@ export default function BlogIndexPage() {
               href="/builder"
               className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black text-xs font-bold uppercase tracking-wider hover:bg-neutral-200 transition-colors shrink-0"
             >
-              Start Building Now →
+              Start Building Free →
             </Link>
           </div>
         </div>
