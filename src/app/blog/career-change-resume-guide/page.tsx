@@ -8,31 +8,26 @@ import {
   HiClock,
   HiUser,
   HiCalendar,
-  HiArrowLeft,
-  HiSparkles,
   HiArrowPath,
-  HiCheckBadge,
-  HiAcademicCap,
   HiQuestionMarkCircle,
-  HiShieldCheck,
   HiBriefcase,
   HiRocketLaunch,
 } from 'react-icons/hi2';
 
 export const metadata: Metadata = {
-  title: 'How to Write a Career Change Resume: Transitioning Industries with Confidence',
+  title: 'How to Write a Career Change Resume in 2026 | ToolEka',
   description:
-    'Pivoting to a new field or industry? Master the Hybrid resume format, transferable skills mapping, and compelling career transition summaries across 8 real-world career pivot scenarios.',
+    'Pivoting to a new field? Master the Hybrid resume format, transferable skills mapping, and compelling career transition summaries across 8 scenarios.',
   alternates: { canonical: 'https://resume.tooleka.com/blog/career-change-resume-guide' },
   openGraph: {
-    title: 'How to Write a Career Change Resume: Transitioning Industries with Confidence',
+    title: 'How to Write a Career Change Resume in 2026 | ToolEka',
     description:
-      'Pivoting to a new field or industry? Master the Hybrid resume format, transferable skills mapping, and compelling career transition summaries across 8 real-world career pivot scenarios.',
+      'Pivoting to a new field? Master the Hybrid resume format, transferable skills mapping, and compelling career transition summaries across 8 scenarios.',
     url: 'https://resume.tooleka.com/blog/career-change-resume-guide',
     type: 'article',
     images: [
       {
-        url: 'https://resume.tooleka.com/favicon.ico',
+        url: 'https://resume.tooleka.com/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Career Change Resume Guide',
@@ -41,9 +36,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'How to Write a Career Change Resume in 2026',
+    title: 'How to Write a Career Change Resume in 2026 | ToolEka',
     description:
-      'Learn how to reframe transferable skills, structure a hybrid resume, and successfully pivot into tech, operations, or product management.',
+      'Pivoting to a new field? Master the Hybrid resume format, transferable skills mapping, and compelling career transition summaries across 8 scenarios.',
+    images: ['https://resume.tooleka.com/og-image.png'],
   },
 };
 
@@ -106,10 +102,10 @@ export default function CareerChangeGuide() {
       '@type': 'Organization',
       name: 'ToolEka',
       url: 'https://tooleka.com',
-      logo: 'https://resume.tooleka.com/favicon.ico',
+      logo: 'https://resume.tooleka.com/og-image.png',
     },
-    datePublished: '2026-02-10T08:00:00+00:00',
-    dateModified: '2026-02-22T10:00:00+00:00',
+    datePublished: '2026-08-22T08:00:00+00:00',
+    dateModified: '2026-08-22T10:00:00+00:00',
     mainEntityOfPage: 'https://resume.tooleka.com/blog/career-change-resume-guide',
     wordCount: 2200,
   };
@@ -187,7 +183,7 @@ export default function CareerChangeGuide() {
                 <HiClock size={13} /> 12 min read (2,200 words)
               </span>
               <span className="text-xs text-[#737373] flex items-center gap-1">
-                <HiCalendar size={13} /> Updated February 22, 2026
+                <HiCalendar size={13} /> Updated August 22, 2026
               </span>
             </div>
 

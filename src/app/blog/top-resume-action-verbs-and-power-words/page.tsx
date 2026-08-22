@@ -22,19 +22,19 @@ import {
 } from 'react-icons/hi2';
 
 export const metadata: Metadata = {
-  title: '250+ High-Impact Resume Action Verbs & Power Words That Get You Hired',
+  title: '250+ High-Impact Resume Action Verbs for 2026 | ToolEka',
   description:
-    'Replace passive job descriptions with 250+ high-impact resume action verbs categorized across 12 disciplines. Includes real before-and-after rewrite transformations.',
+    'Transform passive job descriptions into achievements with 250+ categorized power verbs across 12 disciplines, including before-and-after rewrites.',
   alternates: { canonical: 'https://resume.tooleka.com/blog/top-resume-action-verbs-and-power-words' },
   openGraph: {
-    title: '250+ High-Impact Resume Action Verbs & Power Words That Get You Hired',
+    title: '250+ High-Impact Resume Action Verbs for 2026 | ToolEka',
     description:
-      'Replace passive job descriptions with 250+ high-impact resume action verbs categorized across 12 disciplines. Includes before-and-after transformations.',
+      'Transform passive job descriptions into achievements with 250+ categorized power verbs across 12 disciplines, including before-and-after rewrites.',
     url: 'https://resume.tooleka.com/blog/top-resume-action-verbs-and-power-words',
     type: 'article',
     images: [
       {
-        url: 'https://resume.tooleka.com/favicon.ico',
+        url: 'https://resume.tooleka.com/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Resume Action Verbs Guide',
@@ -43,9 +43,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '250+ Resume Action Verbs & Power Words (2026)',
+    title: '250+ High-Impact Resume Action Verbs for 2026 | ToolEka',
     description:
-      'Transform weak bullet points with 250+ categorized power words, before-and-after transformations, and syntax formulas.',
+      'Transform passive job descriptions into achievements with 250+ categorized power verbs across 12 disciplines, including before-and-after rewrites.',
+    images: ['https://resume.tooleka.com/og-image.png'],
   },
 };
 
@@ -108,10 +109,10 @@ export default function PowerActionVerbsGuide() {
       '@type': 'Organization',
       name: 'ToolEka',
       url: 'https://tooleka.com',
-      logo: 'https://resume.tooleka.com/favicon.ico',
+      logo: 'https://resume.tooleka.com/og-image.png',
     },
-    datePublished: '2026-02-15T08:00:00+00:00',
-    dateModified: '2026-02-22T10:00:00+00:00',
+    datePublished: '2026-08-22T08:00:00+00:00',
+    dateModified: '2026-08-22T10:00:00+00:00',
     mainEntityOfPage: 'https://resume.tooleka.com/blog/top-resume-action-verbs-and-power-words',
     wordCount: 2300,
   };
@@ -189,7 +190,7 @@ export default function PowerActionVerbsGuide() {
                 <HiClock size={13} /> 13 min read (2,300 words)
               </span>
               <span className="text-xs text-[#737373] flex items-center gap-1">
-                <HiCalendar size={13} /> Updated February 22, 2026
+                <HiCalendar size={13} /> Updated August 22, 2026
               </span>
             </div>
 

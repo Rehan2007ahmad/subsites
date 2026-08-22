@@ -19,19 +19,19 @@ import {
 } from 'react-icons/hi2';
 
 export const metadata: Metadata = {
-  title: 'How to Write Powerful Resume Work Experience Bullet Points Using STAR & Google XYZ Methods',
+  title: 'Write Resume Bullet Points with Google XYZ | ToolEka',
   description:
-    'Master the Google XYZ formula and STAR framework to write high-converting resume bullet points with quantified results and measurable business metrics across 8 industries.',
+    'Master the Google XYZ and STAR frameworks to write high-converting resume bullet points with quantified business metrics and real-world examples.',
   alternates: { canonical: 'https://resume.tooleka.com/blog/how-to-format-work-experience-bullet-points' },
   openGraph: {
-    title: 'How to Write Powerful Resume Work Experience Bullet Points Using STAR & Google XYZ Methods',
+    title: 'Write Resume Bullet Points with Google XYZ | ToolEka',
     description:
-      'Master the Google XYZ formula and STAR framework to write high-converting resume bullet points with quantified results and measurable business metrics.',
+      'Master the Google XYZ and STAR frameworks to write high-converting resume bullet points with quantified business metrics and real-world examples.',
     url: 'https://resume.tooleka.com/blog/how-to-format-work-experience-bullet-points',
     type: 'article',
     images: [
       {
-        url: 'https://resume.tooleka.com/favicon.ico',
+        url: 'https://resume.tooleka.com/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Google XYZ Resume Bullet Formula Guide',
@@ -40,9 +40,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'How to Write Resume Bullet Points with Google XYZ & STAR (2026)',
+    title: 'Write Resume Bullet Points with Google XYZ | ToolEka',
     description:
-      'Learn how elite applicants use Google XYZ and STAR frameworks to turn routine job duties into high-impact accomplishments.',
+      'Master the Google XYZ and STAR frameworks to write high-converting resume bullet points with quantified business metrics and real-world examples.',
+    images: ['https://resume.tooleka.com/og-image.png'],
   },
 };
 
@@ -105,10 +106,10 @@ export default function BulletPointsGuide() {
       '@type': 'Organization',
       name: 'ToolEka',
       url: 'https://tooleka.com',
-      logo: 'https://resume.tooleka.com/favicon.ico',
+      logo: 'https://resume.tooleka.com/og-image.png',
     },
-    datePublished: '2026-02-12T08:00:00+00:00',
-    dateModified: '2026-02-22T10:00:00+00:00',
+    datePublished: '2026-08-22T08:00:00+00:00',
+    dateModified: '2026-08-22T10:00:00+00:00',
     mainEntityOfPage: 'https://resume.tooleka.com/blog/how-to-format-work-experience-bullet-points',
     wordCount: 2150,
   };
@@ -186,7 +187,7 @@ export default function BulletPointsGuide() {
                 <HiClock size={13} /> 12 min read (2,150 words)
               </span>
               <span className="text-xs text-[#737373] flex items-center gap-1">
-                <HiCalendar size={13} /> Updated February 22, 2026
+                <HiCalendar size={13} /> Updated August 22, 2026
               </span>
             </div>
 
