@@ -1,47 +1,32 @@
-'use client';
-
-import React, { useState } from 'react';
+import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
-import { useToast } from '@/components/ui/Toast';
 import {
-  HiEnvelope,
   HiGlobeAlt,
   HiClock,
-  HiCheckCircle,
   HiArrowTopRightOnSquare,
   HiQuestionMarkCircle,
+  HiChatBubbleLeftRight,
+  HiInformationCircle,
 } from 'react-icons/hi2';
 
+export const metadata: Metadata = {
+  title: 'Contact Us & Support | ToolEka Free Resume Builder',
+  description:
+    'Need help with your resume or have questions? Contact us via ToolEka support at tooleka.com/contact with the subject "Resume Query".',
+  alternates: { canonical: 'https://resume.tooleka.com/contact' },
+  openGraph: {
+    title: 'Contact Us & Support | ToolEka Free Resume Builder',
+    description:
+      'Need help with your resume or have questions? Contact us via ToolEka support at tooleka.com/contact with the subject "Resume Query".',
+    url: 'https://resume.tooleka.com/contact',
+    type: 'website',
+  },
+};
+
 export default function ContactPage() {
-  const { toast } = useToast();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name || !email || !message) {
-      toast('Please fill out all required fields.', 'error');
-      return;
-    }
-
-    setIsSubmitting(true);
-    // Simulate submission
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      toast('Thank you! Your message has been sent successfully.');
-    }, 600);
-  }
-
   return (
     <>
       <SiteHeader />
@@ -50,47 +35,103 @@ export default function ContactPage() {
           {/* Header Card */}
           <div className="bg-white border border-[#E5E5E5] p-6 sm:p-10 mb-8 shadow-xs">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white text-xs font-semibold uppercase tracking-widest mb-4">
-              <HiEnvelope size={14} />
-              <span>Get in Touch</span>
+              <HiChatBubbleLeftRight size={14} />
+              <span>Support &amp; Inquiries</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-black tracking-tight mb-3">
-              Contact Us &amp; Support
+              Contact Us
             </h1>
             <p className="text-sm text-[#595959] leading-relaxed max-w-2xl">
-              Have a question about our resume templates, feature suggestions, partnership inquiry, or technical feedback? We’d love to hear from you.
+              Have a question about our resume builder, feature suggestions, or technical support? We handle all inquiries through the central ToolEka contact portal.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            {/* Left Column: Direct Info */}
-            <div className="space-y-4">
-              {/* Primary Email */}
-              <div className="bg-white border border-[#E5E5E5] p-6 shadow-xs">
-                <div className="flex items-center gap-2 text-black font-bold text-sm mb-1">
-                  <HiEnvelope size={17} /> Email Us
-                </div>
-                <p className="text-xs text-[#595959] mb-3">Direct inbox for general inquiries and feedback:</p>
-                <a
-                  href="mailto:hello@tooleka.com"
-                  className="text-xs font-semibold text-black underline hover:text-neutral-600 break-all"
-                >
-                  hello@tooleka.com
-                </a>
+            {/* Main Central Notice & Action Area */}
+            <div className="md:col-span-2 bg-white border border-[#E5E5E5] p-6 sm:p-10 shadow-xs space-y-6">
+              <div>
+                <h2 className="text-xl font-bold text-black mb-2">
+                  How to Send Us a Message
+                </h2>
+                <p className="text-sm text-[#404040] leading-relaxed">
+                  To reach our support and developer team, please visit our official contact page at{' '}
+                  <a
+                    href="https://tooleka.com/contact"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-black font-bold underline hover:text-neutral-600"
+                  >
+                    https://tooleka.com/contact
+                  </a>{' '}
+                  and submit your message with the subject line <strong>&ldquo;Resume Query&rdquo;</strong>.
+                </p>
               </div>
 
-              {/* Main ToolEka Hub Link */}
+              {/* Action Banner Card */}
+              <div className="bg-[#F7F7F7] border border-[#E5E5E5] p-6 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <HiInformationCircle size={18} />
+                  </div>
+                  <div>
+                    <strong className="text-sm text-black block mb-1">
+                      Quick Contact Instructions
+                    </strong>
+                    <ul className="text-xs text-[#595959] space-y-1.5 list-disc list-inside">
+                      <li>
+                        Go to:{' '}
+                        <a
+                          href="https://tooleka.com/contact"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-black underline"
+                        >
+                          tooleka.com/contact
+                        </a>
+                      </li>
+                      <li>
+                        Set Subject to:{' '}
+                        <span className="font-mono font-bold text-black bg-white px-1.5 py-0.5 border border-[#E5E5E5]">
+                          Resume Query
+                        </span>
+                      </li>
+                      <li>Describe your issue, feedback, or suggestion in detail</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <a
+                    href="https://tooleka.com/contact"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 transition-colors"
+                  >
+                    Open ToolEka Contact Page <HiArrowTopRightOnSquare size={14} />
+                  </a>
+                </div>
+              </div>
+
+              <div className="text-xs text-[#595959] leading-relaxed">
+                Using the subject <strong>&ldquo;Resume Query&rdquo;</strong> routes your ticket directly to the resume builder engineering queue for expedited assistance.
+              </div>
+            </div>
+
+            {/* Side Info Cards */}
+            <div className="space-y-4">
+              {/* ToolEka Network */}
               <div className="bg-white border border-[#E5E5E5] p-6 shadow-xs">
                 <div className="flex items-center gap-2 text-black font-bold text-sm mb-1">
                   <HiGlobeAlt size={17} /> ToolEka Network
                 </div>
-                <p className="text-xs text-[#595959] mb-3">
-                  You can also contact our parent portal or explore our suite of online developer &amp; productivity tools:
+                <p className="text-xs text-[#595959] leading-relaxed mb-4">
+                  Explore our parent suite of free, privacy-first online tools and utilities at tooleka.com.
                 </p>
                 <a
                   href="https://tooleka.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-black border border-[#E5E5E5] px-3 py-1.5 hover:bg-[#F7F7F7] transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-black border border-[#E5E5E5] px-3 py-1.5 hover:bg-[#F7F7F7] transition-colors"
                 >
                   Visit tooleka.com <HiArrowTopRightOnSquare size={13} />
                 </a>
@@ -102,86 +143,9 @@ export default function ContactPage() {
                   <HiClock size={17} /> Response Time
                 </div>
                 <p className="text-xs text-[#595959] leading-relaxed">
-                  We typically respond within <strong>24 to 48 hours</strong> during business days (Monday &ndash; Friday).
+                  We typically reply within <strong>24 to 48 hours</strong> on business days (Monday &ndash; Friday).
                 </p>
               </div>
-            </div>
-
-            {/* Right Column: Contact Form */}
-            <div className="md:col-span-2 bg-white border border-[#E5E5E5] p-6 sm:p-8 shadow-xs">
-              <h2 className="text-lg font-bold text-black border-b border-[#E5E5E5] pb-3 mb-6">
-                Send Us a Direct Message
-              </h2>
-
-              {isSubmitted ? (
-                <div className="py-12 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                    <HiCheckCircle size={28} />
-                  </div>
-                  <h3 className="text-base font-bold text-black">Message Sent!</h3>
-                  <p className="text-xs text-[#595959] max-w-sm mx-auto">
-                    Thank you for contacting ToolEka. We have received your inquiry and will follow up with you at <strong>{email}</strong> shortly.
-                  </p>
-                  <button
-                    onClick={() => {
-                      setIsSubmitted(false);
-                      setMessage('');
-                      setSubject('');
-                    }}
-                    className="mt-4 px-4 py-2 bg-black text-white text-xs font-semibold hover:bg-neutral-800 transition-colors"
-                  >
-                    Send Another Message
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input
-                      label="Your Name *"
-                      placeholder="e.g. Alex Johnson"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                    <Input
-                      label="Email Address *"
-                      type="email"
-                      placeholder="e.g. alex@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <Input
-                    label="Subject (Optional)"
-                    placeholder="e.g. Feature request / Bug report / Question"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                  />
-
-                  <Textarea
-                    label="Your Message *"
-                    placeholder="Describe your inquiry, issue, or feedback in detail..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    rows={5}
-                    required
-                  />
-
-                  <div className="pt-2 flex items-center justify-between">
-                    <span className="text-[11px] text-[#737373]">* Required fields</span>
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      size="md"
-                      loading={isSubmitting}
-                    >
-                      Send Message
-                    </Button>
-                  </div>
-                </form>
-              )}
             </div>
           </div>
 
@@ -192,11 +156,11 @@ export default function ContactPage() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs text-[#595959] leading-relaxed">
               <div>
-                <strong className="text-black block mb-1">Is my resume saved on your servers?</strong>
+                <strong className="text-black block mb-1">Is my resume data saved on your servers?</strong>
                 No. All draft data is stored strictly in your browser&apos;s local storage. If you switch computers or clear your browser history, your resume draft will be reset. Be sure to use &ldquo;Export JSON&rdquo; to create a backup file!
               </div>
               <div>
-                <strong className="text-black block mb-1">Is there any fee to download?</strong>
+                <strong className="text-black block mb-1">Is there any fee to download my PDF?</strong>
                 No. ToolEka is 100% free with zero watermarks and no credit card required.
               </div>
             </div>

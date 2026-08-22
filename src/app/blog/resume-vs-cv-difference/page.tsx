@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
+import { RelatedArticles } from '@/components/blog/RelatedArticles';
 import {
   HiClock,
   HiUser,
@@ -252,6 +253,9 @@ export default function ResumeVsCvGuide() {
                 </Link>
               </div>
             </div>
+
+            {/* Internal Linking: Related Career Guides */}
+            <RelatedArticles currentSlug="resume-vs-cv-difference" />
           </div>
         </article>
       </main>
